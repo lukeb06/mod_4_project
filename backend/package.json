@@ -9,7 +9,7 @@
         "start:development": "nodemon ./bin/www",
         "start:production": "node ./bin/www",
         "build": "node psql-setup-script.js",
-        "build:db": "rm db/dev.db && npx dotenv sequelize db:migrate && npx dotenv sequelize db:seed:all"
+        "rebuild-db": "rm db/dev.db && npx dotenv sequelize db:migrate && npx dotenv sequelize db:seed:all"
     },
     "keywords": [],
     "author": "",
