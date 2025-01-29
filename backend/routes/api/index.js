@@ -4,9 +4,9 @@ const { restoreUser } = require('../../utils/auth.js');
 router.use(restoreUser);
 
 
-router.post('/test', function(req, res) {
+router.post('/test', function (req, res) {
     res.json({ requestBody: req.body });
-  });
+});
 
 // GET /api/set-token-cookie
 const { setTokenCookie } = require('../../utils/auth.js');
@@ -45,9 +45,5 @@ router.get(
     return res.json(req.user);
   }
 );
-
-
-
-
 
 module.exports = router;
