@@ -7,65 +7,65 @@ module.exports = (sequelize, DataTypes) => {
         static associate(models) {
             // define association here
             Spot.belongsTo(models.User, {
-                foreignKey: "ownerId"
-            })
+                foreignKey: 'ownerId',
+            });
 
             Spot.hasMany(models.SpotImage, {
-                foreignKey: "spotId"
-            })
+                foreignKey: 'spotId',
+            });
 
             Spot.hasMany(models.Review, {
-                foreignKey: "spotId"
-            })
+                foreignKey: 'spotId',
+            });
 
             Spot.hasMany(models.Booking, {
-                foreignKey: "spotId"
-            })
+                foreignKey: 'spotId',
+            });
         }
     }
 
     Spot.init(
-        {   
+        {
             ownerId: {
                 type: DataTypes.INTEGER,
-                allowNull: false
+                allowNull: false,
             },
             address: {
                 type: DataTypes.STRING,
-                allowNull: false
+                allowNull: false,
             },
             city: {
                 type: DataTypes.STRING,
-                allowNull: false
+                allowNull: false,
             },
             state: {
                 type: DataTypes.STRING,
-                allowNull: false
+                allowNull: false,
             },
             country: {
                 type: DataTypes.STRING,
-                allowNull: false
+                allowNull: false,
             },
             lat: {
-                type: DataTypes.DECIMAL(8,6),
+                type: DataTypes.DECIMAL(8, 6),
                 allowNull: false,
             },
             lng: {
                 type: DataTypes.DECIMAL(9, 6),
-                allowNull: false
+                allowNull: false,
             },
             name: {
                 type: DataTypes.STRING,
-                allowNull: false
+                allowNull: false,
             },
             description: {
                 type: DataTypes.STRING,
-                allowNull: false
+                allowNull: false,
             },
             price: {
                 type: DataTypes.DECIMAL(7, 2),
-                allowNull: false
-            }
+                allowNull: false,
+            },
         },
         {
             sequelize,
@@ -79,3 +79,4 @@ module.exports = (sequelize, DataTypes) => {
     );
     return Spot;
 };
+

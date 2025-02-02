@@ -7,8 +7,8 @@ module.exports = (sequelize, DataTypes) => {
         static associate(models) {
             // define association here
             SpotImage.belongsTo(models.Spot, {
-                foreignKey: "spotId"
-            })
+                foreignKey: 'spotId',
+            });
         }
     }
 
@@ -16,28 +16,28 @@ module.exports = (sequelize, DataTypes) => {
         {
             spotId: {
                 type: DataTypes.INTEGER,
-                allowNull: false
+                allowNull: false,
             },
             url: {
                 type: DataTypes.STRING,
-                allowNull: false
+                allowNull: false,
             },
-            thumbnail: {
+            preview: {
                 type: DataTypes.BOOLEAN,
                 allowNull: false,
-                defaultValue: false
+                defaultValue: false,
             },
-            
         },
         {
             sequelize,
             modelName: 'SpotImage',
             defaultScope: {
                 attributes: {
-                    exclude: [ 'url' ],
+                    exclude: ['url'],
                 },
             },
         },
     );
     return SpotImage;
 };
+
