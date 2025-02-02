@@ -20,10 +20,20 @@ module.exports = {
                     type: Sequelize.STRING(50),
                     allowNull: false,
                 },
-                thumbnail: {
+                preview: {
                     type: Sequelize.BOOLEAN,
                     allowNull: false,
                     defaultValue: false,
+                },
+                createdAt: {
+                    type: Sequelize.DATE,
+                    allowNull: false,
+                    defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
+                },
+                updatedAt: {
+                    type: Sequelize.DATE,
+                    allowNull: false,
+                    defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
                 },
             },
             options,
