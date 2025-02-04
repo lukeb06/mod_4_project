@@ -4,6 +4,7 @@ const { setTokenCookie, restoreUser, requireAuth } = require('../../utils/auth')
 const { handleValidationErrors } = require('../../utils/validation');
 const { Booking, Spot, SpotImage, sequelize } = require('../../db/models/booking');
 const booking = require('../../db/models/booking');
+const spotImage = require('../../db/models/spotImage');
 const router = express.Router();
 
 // DELETE A BOOKING
@@ -46,36 +47,30 @@ router.get('/current', requireAuth, async (req, res, next) => {
             where: {
                 userId: req.user.id
             },
-            include: {
-                model: Spot,
-                attributes: [
-                    'id',
-                    'ownerId',
-                    'address',
-                    'city',
-                    'state',
-                    'country',
-                    'lat',
-                    'lng',
-                    'name',
-                    'price',
-                    [sequelize.fn('MAX', sequelize.col('url')), 'previewImage'],
-                ],
-                include: {
-                    model: SpotImage,
-                    attributes: ['url']
+            include: [
+                {
+                    model: Spot,
+                    attributes: {
+                        include: [[sequelize.fn('MAX', sequelize.col('url')), 'previewImage']],
+                        exclude: ['description', 'createdAt', 'updatedAt'],
+                    },
+                },
+                {
+                    model: Booking,
+                    attributes: ['id', 'spotId', 'userId', 'startDate', 'endDate', 'createdAt', "updatedAt"] 
+                    
+                },
+                {
+                    model: spotImage,
+                    attributes: ['id', 'url']
                 }
-            }
+
+            ],
         })
 
-        const bookingsResponse = currentBooking.map(booking => {
-            return {
-               previewImage: booking.dataValues.Spot.dataValues.previewImage
-            }
-        })
         
         res.status(200);
-        return res.json({ bookingsResponse})
+        return res.json( currentBooking )
     } catch (error) {
         res.status(400).json({
             message: error.message
