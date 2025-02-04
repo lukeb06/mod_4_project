@@ -2,7 +2,7 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 
 const { requireAuth } = require('../../utils/auth');
-const { Spot, SpotImage, Review, sequelize } = require('../../db/models');
+const { User, Spot, SpotImage, Review, sequelize } = require('../../db/models');
 const { check } = require('express-validator');
 const { handleValidationErrors } = require('../../utils/validation');
 const router = express.Router();
@@ -58,7 +58,7 @@ router.post('/', requireAuth, validateCreateSpot, async (req, res) => {
         } = req.body;
         const ownerId = req.user.id;
 
-        const spot = await Spot.create({
+        const newSpot = await Spot.create({
             address,
             city,
             state,
@@ -74,21 +74,9 @@ router.post('/', requireAuth, validateCreateSpot, async (req, res) => {
         });
 
         res.status(201).json({
-            spot: {
-                id: spot.id,
-                ownerId: spot.ownerId,
-                address: spot.address,
-                city: spot.city,
-                state: spot.state,
-                country: spot.country,
-                lat: spot.lat,
-                lng: spot.lng,
-                name: spot.name,
-                description: spot.description,
-                price: spot.price,
-                createdAt: spot.createdAt,
-                updatedAt: spot.updatedAt,
-            },
+            id: newSpot.id,
+            ownerId: newSpot.ownerId,
+            newSpot,
         });
     } catch (error) {
         res.status(400).json({
@@ -175,6 +163,57 @@ router.put('/:spotId', requireAuth, validateCreateSpot, async (req, res, next) =
             message: 'Spot was not found',
         });
     }
+});
+
+// Create a Review for a Spot based on the Spot's id
+const validateCreateReview = [
+    check('review').exists({ checkFalsy: true }).notEmpty().withMessage('Review text is required'),
+    check('stars')
+        .exists({ checkFalsy: true })
+        .isInt({ min: 1, max: 5 })
+        .withMessage('Stars must be an integer from 1 to 5'),
+    handleValidationErrors,
+];
+
+router.post('/:spotId/reviews', requireAuth, validateCreateReview, async (req, res) => {
+    const id = req.params.spotId;
+    const spotId = parseInt(id);
+    const { review, stars, createdAt, updatedAt } = req.body;
+    const userId = req.user.id;
+
+    // check if Spot does not exist
+    const spot = await Spot.findByPk(spotId);
+    if (!spot) {
+        return res.status(404).json({
+            message: "Spot couldn't be found",
+        });
+    }
+
+    // check if the review from current user already exists for the spot
+    const currentReview = await Review.findOne({
+        where: {
+            spotId,
+            userId,
+        },
+    });
+
+    if (currentReview) {
+        return res.status(500).json({
+            message: 'User already has a review for this spot',
+        });
+    }
+
+    const newReview = await Review.create({
+        id,
+        userId,
+        spotId,
+        review,
+        stars,
+        createdAt,
+        updatedAt,
+    });
+
+    res.status(201).json({ newReview });
 });
 
 module.exports = router;
