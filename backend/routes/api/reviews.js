@@ -17,6 +17,9 @@ router.get('/current', requireAuth, async (req, res) => {
                 },
                 {
                     model: Spot,
+                    where: {
+                        preview: true,
+                    },
                     attributes: {
                         include: [[sequelize.fn('MAX', sequelize.col('url')), 'previewImage']],
                         exclude: ['createdAt', 'updatedAt', 'description'],
