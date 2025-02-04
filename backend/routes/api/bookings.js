@@ -2,7 +2,7 @@ const express = require('express');
 const { check } = require('express-validator');
 const { setTokenCookie, restoreUser, requireAuth } = require('../../utils/auth');
 const { handleValidationErrors } = require('../../utils/validation');
-const { booking } = require('../../db/models/booking');
+const { Booking, Spot, SpotImage, sequelize } = require('../../db/models/booking');
 const booking = require('../../db/models/booking');
 const router = express.Router();
 
@@ -10,7 +10,7 @@ const router = express.Router();
 router.delete('/:bookingId', requireAuth, async (req, res, next) => {
     try {
         const bookingId = req.params.id;
-        const bookingToDelete = await booking.findOne({
+        const bookingToDelete = await Booking.findOne({
             where: {
                 id: bookingId,
             },
@@ -36,6 +36,52 @@ router.delete('/:bookingId', requireAuth, async (req, res, next) => {
         });
     }
 });
+
+
+//  RETURN ALL OF THE BOOKINGS OF CURRENT USER
+
+router.get('/current', requireAuth, async (req, res, next) => {
+    try {
+        const currentBooking = await Booking.findAll({
+            where: {
+                userId: req.user.id
+            },
+            include: {
+                model: Spot,
+                attributes: [
+                    'id',
+                    'ownerId',
+                    'address',
+                    'city',
+                    'state',
+                    'country',
+                    'lat',
+                    'lng',
+                    'name',
+                    'price',
+                    [sequelize.fn('MAX', sequelize.col('url')), 'previewImage'],
+                ],
+                include: {
+                    model: SpotImage,
+                    attributes: ['url']
+                }
+            }
+        })
+
+        const bookingsResponse = currentBooking.map(booking => {
+            return {
+               previewImage: booking.dataValues.Spot.dataValues.previewImage
+            }
+        })
+        
+        res.status(200);
+        return res.json({ bookingsResponse})
+    } catch (error) {
+        res.status(400).json({
+            message: error.message
+        })
+    }
+})
 
 module.exports = router;
 
