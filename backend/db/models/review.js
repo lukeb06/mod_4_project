@@ -7,15 +7,15 @@ module.exports = (sequelize, DataTypes) => {
         static associate(models) {
             // define association here
             Review.belongsTo(models.User, {
-                foreignKey: "userId"
-            })
+                foreignKey: 'userId',
+            });
             Review.belongsTo(models.Spot, {
-                foreignKey: "spotId"
-            })
+                foreignKey: 'spotId',
+            });
 
             Review.hasMany(models.ReviewImage, {
-                foreignKey: "reviewId"
-            })
+                foreignKey: 'reviewId',
+            });
         }
     }
 
@@ -23,29 +23,27 @@ module.exports = (sequelize, DataTypes) => {
         {
             userId: {
                 type: DataTypes.INTEGER,
-                allowNull: false
+                allowNull: false,
             },
             spotId: {
                 type: DataTypes.INTEGER,
-                allowNull: false
+                allowNull: false,
             },
             review: {
                 type: DataTypes.STRING,
-                allowNull: false
+                allowNull: false,
             },
             stars: {
-                type: DataTypes.DECIMAL(2,1),
+                type: DataTypes.INTEGER,
                 allowNull: false,
-                
             },
-            
         },
         {
             sequelize,
             modelName: 'Review',
             defaultScope: {
                 attributes: {
-                    exclude: [ 'createdAt', 'updatedAt' ],
+                    exclude: ['createdAt', 'updatedAt'],
                 },
             },
         },
