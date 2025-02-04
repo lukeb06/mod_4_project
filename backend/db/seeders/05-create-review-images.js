@@ -20,10 +20,17 @@ module.exports = {
                     url: 'https://picsum.photos/300/200',
                 },
                 {
+                    reviewId: 3,
+                    url: 'https://picsum.photos/300/200',
+                },
+                {
                     reviewId: 4,
                     url: 'https://picsum.photos/300/200',
                 },
-
+                {
+                    reviewId: 5,
+                    url: 'https://picsum.photos/300/200',
+                },
                 {
                     reviewId: 6,
                     url: 'https://picsum.photos/300/200',
@@ -43,7 +50,7 @@ module.exports = {
         return queryInterface.bulkDelete(
             options,
             {
-                reviewId: { [Op.in]: [1, 2, 3] },
+                reviewId: { [Op.in]: [1, 2, 3, 4, 5, 6, 7] },
             },
             {},
         );
