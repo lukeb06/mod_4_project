@@ -276,4 +276,26 @@ router.post('/:spotId/reviews', requireAuth, validateCreateReview, async (req, r
     res.status(201).json({ newReview });
 });
 
+router.delete('/:spotId', requireAuth, async (req, res) => {
+    const { spotId } = req.params;
+    const spotToDelete = await Spot.findByPk(spotId);
+
+    if (!spotToDelete) {
+        return res.status(404).json({
+            message: 'Spot not found',
+        });
+    }
+
+    if (req.user.id !== spotToDelete.ownerId) {
+        return res.status(403).json({
+            message: 'Forbidden',
+        });
+    }
+
+    await spotToDelete.destroy();
+    return res.status(200).json({
+        message: 'Spot successfully deleted',
+    });
+});
+
 module.exports = router;
