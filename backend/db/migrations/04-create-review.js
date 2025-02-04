@@ -19,10 +19,10 @@ module.exports = {
                 review: {
                     type: Sequelize.STRING(1000),
                     allowNull: false,
-                    unique: true
+                    unique: true,
                 },
                 stars: {
-                    type: Sequelize.DECIMAL(2,1),
+                    type: Sequelize.INTEGER,
                     allowNull: false,
                 },
                 createdAt: {
