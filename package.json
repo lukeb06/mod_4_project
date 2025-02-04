@@ -21,11 +21,6 @@
         "build": "npm run --prefix backend build",
         "format": "prettier . --write"
     },
-    "husky": {
-        "hooks": {
-            "pre-commit": "npm run format && git add ."
-        }
-    },
     "keywords": [],
     "author": "",
     "license": "ISC"
