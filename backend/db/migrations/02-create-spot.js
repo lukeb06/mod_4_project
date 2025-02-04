@@ -33,24 +33,24 @@ module.exports = {
                     allowNull: false,
                 },
                 lat: {
-                    type: Sequelize.DECIMAL(8,6),
+                    type: Sequelize.DECIMAL(8, 6),
                     allowNull: false,
                 },
                 lng: {
-                    type: Sequelize.DECIMAL(9,6),
-                    allowNull: false
+                    type: Sequelize.DECIMAL(9, 6),
+                    allowNull: false,
                 },
                 name: {
                     type: Sequelize.STRING(40),
-                    allowNull: false
+                    allowNull: false,
                 },
                 description: {
                     type: Sequelize.STRING(500),
-                    allowNull: false
+                    allowNull: false,
                 },
                 price: {
                     type: Sequelize.DECIMAL(7, 2),
-                    allowNull: false
+                    allowNull: false,
                 },
                 createdAt: {
                     allowNull: false,

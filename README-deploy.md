@@ -49,7 +49,7 @@ git push origin main
 
 Then follow the deployment instructions below.
 
-## Phase 1: Set up a __package.json__ at the project root
+## Phase 1: Set up a **package.json** at the project root
 
 Initialize a `package.json` file at the very root of your project directory
 (outside of both the `backend` and `frontend` folders) with `npm init -y`.
@@ -138,7 +138,7 @@ click on "Web Service" to create the application that will be deployed.
 > "Configure Account" for GitHub in the right sidebar to make the connection
 > between your Render and GitHub accounts, then continue. If you run into issues
 > with the GitHub connection, use this article to [reset your GitHub
-> connection]._
+> > connection]._
 
 Look for the name of the application you want to deploy, and click the "Connect"
 button to the right of the name.
@@ -151,7 +151,7 @@ the environment variables to properly deploy the application.
 Start by giving your application a name. This is the name that will be included
 in the URL of the deployed site, so make sure it is clear and simple. The name
 should be entered in kebab-case. The words "Airbnb", "Meetup", and "Clone"
-***MUST NOT BE INCLUDED*** in the name. If you submit your project with any of
+**_MUST NOT BE INCLUDED_** in the name. If you submit your project with any of
 those words in the URL, you'll be asked to recreate your Render instance.
 
 Leave the root directory field blank. By default, Render will run commands from
@@ -178,7 +178,7 @@ npm run sequelize --prefix backend db:seed:all
 ```
 
 This script will install dependencies, run the build command in the
-__package.json__ file, then run the `down` & `up` functions in the migration and
+**package.json** file, then run the `down` & `up` functions in the migration and
 seed files. All of these commands will be run from the backend directory.
 
 This is the recommended script to use while you develop and test your production
@@ -220,7 +220,7 @@ npm start
 
 Scroll down to the "Environment Variables" section to configure the values your
 application needs to access to run properly. In the development environment, you
-have been securing these variables in the __.env__ file, which has been removed
+have been securing these variables in the **.env** file, which has been removed
 from source control. In this step, you will need to input the keys and values
 for the environment variables you need for production into the Render GUI.
 
@@ -230,10 +230,10 @@ are only used in the development environment, not production.
 
 Add the following keys and values in the Render GUI form:
 
-- JWT_SECRET (click "Generate" to generate a secure secret for production)
-- JWT_EXPIRES_IN 604800 (or the value as your local __.env file__)
-- NODE_ENV production
-- SCHEMA (custom name, in snake_case)
+-   JWT_SECRET (click "Generate" to generate a secure secret for production)
+-   JWT_EXPIRES_IN 604800 (or the value as your local **.env file**)
+-   NODE_ENV production
+-   SCHEMA (custom name, in snake_case)
 
 Open a new tab and navigate to your Render dashboard. Click on your Postgres
 database instance and scroll down to "Connections". Copy the value from
@@ -241,10 +241,10 @@ database instance and scroll down to "Connections". Copy the value from
 
 Add the following key and paste the value you copied:
 
-- DATABASE_URL (copy value from Internal Database URL field)
+-   DATABASE_URL (copy value from Internal Database URL field)
 
 _Note: As you work to further develop your project, you may need to add more
-environment variables to your local __.env__ file. Make sure you add these
+environment variables to your local **.env** file. Make sure you add these
 environment variables to the Render GUI as well for the next deployment._
 
 Click on the "Advanced" dropdown at the bottom of the form and make sure "Yes"
@@ -266,9 +266,9 @@ The main limitation of the free Render Postgres database instance is that it
 will be deleted after 30 days. In order to keep your application up and running,
 you MUST create a new database instance before the 30 day period ends.
 
-__Set up calendar reminders for yourself to reset your Render Postgres database
+**Set up calendar reminders for yourself to reset your Render Postgres database
 instance every 25 days so your application(s) will not experience any
-downtime.__
+downtime.**
 
 Each time you get your calendar reminder, follow the steps below.
 
@@ -282,11 +282,11 @@ Each time you get your calendar reminder, follow the steps below.
    application that was connected to the original database with the new database
    information. For each application:
 
-  - Click on the application name from your [Dashboard]
-  - Click on "Environment" in the left sidebar
-  - Replace the value for `DATABASE_URL` with the new value from your new database
+-   Click on the application name from your [Dashboard]
+-   Click on "Environment" in the left sidebar
+-   Replace the value for `DATABASE_URL` with the new value from your new database
     instance, and then click "Save Changes"
-  - At the top of the page, click "Manual Deploy", and choose "Clear build cache
+-   At the top of the page, click "Manual Deploy", and choose "Clear build cache
     & deploy".
 
 4. After each application is updated with the new database instance and
@@ -307,13 +307,13 @@ production environment (errors in the project repo), or errors in connecting
 your application to the Render Postgres database instance (errors setting up the
 Web Service in the Render GUI).
 
-__Troubleshooting Project Configuration__
+**Troubleshooting Project Configuration**
 
 Check the following to make sure your project is properly set up to run sqlite
 in development, and Postgres in production.
 
-- Does your configuration file include a `production` key including the database
-  url for Postgres?
+-   Does your configuration file include a `production` key including the database
+    url for Postgres?
 
 ```js
 // ...
@@ -325,27 +325,27 @@ in development, and Postgres in production.
   // ...
 ```
 
-- Did you properly set up your project to create a schema within the production
-  database, through the __psql-setup-script.js__ file and `build` command in the
-  __backend/package.json__ file?
+-   Did you properly set up your project to create a schema within the production
+    database, through the **psql-setup-script.js** file and `build` command in the
+    **backend/package.json** file?
 
-- Did you properly define that schema in ALL of the migration and seeder files?
+-   Did you properly define that schema in ALL of the migration and seeder files?
 
-- Did you include the correct scripts in the __backend/package.json__ and root __package.json__ files?
+-   Did you include the correct scripts in the **backend/package.json** and root **package.json** files?
 
-__Web Service Setup Issues__
+**Web Service Setup Issues**
 
 Check the following fields to make sure your database connection is set up
 properly:
 
-- Environment variables: Did you include the `NODE_ENV` variable set to
-  "production" and the `DATABASE_URL` key set to the "Internal Database URL"
-  value from your Render Postgres database instance?
+-   Environment variables: Did you include the `NODE_ENV` variable set to
+    "production" and the `DATABASE_URL` key set to the "Internal Database URL"
+    value from your Render Postgres database instance?
 
-- Deployment logs: Did each command in your build script and start script run as
-  expected?
+-   Deployment logs: Did each command in your build script and start script run as
+    expected?
 
-- Deployment Logs: Did the migration files and seeder files run as expected?
+-   Deployment Logs: Did the migration files and seeder files run as expected?
 
 ### Checking the Postgres Database (Advanced Troubleshooting)
 
@@ -362,22 +362,23 @@ Paste this value into your terminal. This will open up Postgres with a
 connection to your remote database. At this point, you can use Postgres commands
 locally to examine the contents of your database. Try the following:
 
-- `\dn` - lists all of the schemas in the database
-  - Does your database show the correct schema for your project?
+-   `\dn` - lists all of the schemas in the database
 
-- `\dt <SchemaName>.*` - lists all tables within `<SchemaName>` schema
-  - Do you see all of your tables within the schema? You should see the `Users` table, as well as the `SequelizeMeta` and `SequelizeData` tables at this point.
+    -   Does your database show the correct schema for your project?
 
-- `SELECT * FROM "<SchemaName>"."Users";` - lists all entries in the `Users` table
-  within `SchemaName` schema
- - Does the `Users` table show the appropriate seed data?
+-   `\dt <SchemaName>.*` - lists all tables within `<SchemaName>` schema
+
+    -   Do you see all of your tables within the schema? You should see the `Users` table, as well as the `SequelizeMeta` and `SequelizeData` tables at this point.
+
+-   `SELECT * FROM "<SchemaName>"."Users";` - lists all entries in the `Users` table
+    within `SchemaName` schema
+-   Does the `Users` table show the appropriate seed data?
 
 If there are any problems with the way the database or schema is set up, you can drop the schema for your application and all tables within it, using the following command:
 
 ```sql
 DROP SCHEMA <SchemaName> CASCADE
 ```
-
 
 ## Re-deployment
 
@@ -386,7 +387,6 @@ There are two ways to re-deploy your `main` branch changes:
 1. If you set up your application for Auto-deployment, it should automatically re-deploy after every push to main.
 
 2. You can manually trigger a re-deployment at any time. Click on the blue "Manual Deploy" button, and choose "Clear Build Cache & Deploy". You will be able to see the logs and confirm that your re-deployment is successful.
-
 
 [Render homepage]: https://render.com/
 [Dashboard]: https://dashboard.render.com/

@@ -15,8 +15,7 @@ module.exports = {
                 references: {
                     model: 'Reviews',
                 },
-                onDelete: "CASCADE"
-                
+                onDelete: 'CASCADE',
             },
             {
                 after: 'id',
