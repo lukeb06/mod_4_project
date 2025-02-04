@@ -141,4 +141,42 @@ router.get('/', async (req, res) => {
     return res.json(spotsResponse);
 });
 
+// EDIT A SPOT 
+
+router.put('/:spotId', requireAuth, validateCreateSpot, async (req, res, next) => {
+    try {
+        const { spotId } = req.params.id;
+        const { address, city, state, country, lat, lng, name, description, price } = req.body;
+
+        const spotToUpdate = await Spot.findByPk(spotId);
+
+        if (!spotToUpdate) {
+            res.status(400).json({
+                message: "Not a valid spot"
+            })
+        }
+        if (req.user.id === spotToUpdate.ownerId) {
+            await spotToUpdate.update({
+                address: address,
+                city: city,
+                state: state,
+                country: country,
+                lat: lat,
+                lng: lng,
+                name: name,
+                description: description,
+                price: price
+            })
+            res.json(spotToUpdate);
+            res.status(200);
+        }
+    } catch (error) {
+        res.status(404).json({
+            message: "Spot was not found"
+        })
+
+    }
+})
+
+
 module.exports = router;
