@@ -9,6 +9,7 @@
         "undici-types": "^6.20.0"
     },
     "devDependencies": {
+        "husky": "^9.1.7",
         "prettier": "^3.4.2"
     },
     "scripts": {
@@ -19,6 +20,11 @@
         "start": "npm start --prefix backend",
         "build": "npm run --prefix backend build",
         "format": "prettier . --write"
+    },
+    "husky": {
+        "hooks": {
+            "pre-commit": "npm run format"
+        }
     },
     "keywords": [],
     "author": "",
