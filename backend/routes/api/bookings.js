@@ -2,9 +2,7 @@ const express = require('express');
 const { check } = require('express-validator');
 const { setTokenCookie, restoreUser, requireAuth } = require('../../utils/auth');
 const { handleValidationErrors } = require('../../utils/validation');
-const { Booking, Spot, SpotImage, sequelize } = require('../../db/models/booking');
-const booking = require('../../db/models/booking');
-const spotImage = require('../../db/models/spotImage');
+const { Booking, Spot, SpotImage, sequelize } = require('../../db/models');
 const router = express.Router();
 
 // DELETE A BOOKING
@@ -41,11 +39,11 @@ router.delete('/:bookingId', requireAuth, async (req, res, next) => {
 
 //  RETURN ALL OF THE BOOKINGS OF CURRENT USER
 
-router.get('/current', requireAuth, async (req, res, next) => {
+router.get('/current', async (req, res, next) => {
     try {
         const currentBooking = await Booking.findAll({
             where: {
-                userId: req.user.id
+                userId: 1
             },
             include: [
                 {
@@ -61,15 +59,14 @@ router.get('/current', requireAuth, async (req, res, next) => {
                     
                 },
                 {
-                    model: spotImage,
-                    attributes: ['id', 'url']
+                    model: SpotImage,
+                    attributes: ['url']
                 }
 
             ],
         })
 
         
-        res.status(200);
         return res.json( currentBooking )
     } catch (error) {
         res.status(400).json({
