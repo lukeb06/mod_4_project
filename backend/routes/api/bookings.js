@@ -3,11 +3,12 @@ const { check } = require('express-validator');
 const { setTokenCookie, restoreUser, requireAuth } = require('../../utils/auth');
 const { handleValidationErrors } = require('../../utils/validation');
 const { Booking, Spot, SpotImage, sequelize } = require('../../db/models');
+const booking = require('../../db/models/booking');
 const router = express.Router();
 
 
 // DELETE A BOOKING
-router.delete('/:bookingId', requireAuth, async (req, res, next) => {
+router.delete('/:bookingId', async (req, res, next) => {
     try {
         const { bookingId } = req.params;
 
@@ -16,25 +17,24 @@ router.delete('/:bookingId', requireAuth, async (req, res, next) => {
                 id: bookingId,
             },
         });
+        const date = new Date();
 
-        if (!bookingToDelete) return res.status(404).json({ message: 'Booking not found' });
-        if (req.user.id !== bookingToDelete.userId)
-            return res.status(403).json({ message: 'Forbidden' });
+        if (bookingToDelete) {
+            if (req.user.id === booking.userId) {
+                booking.destroy();
+                res.status.json({
+                    message: "booking was successfully deleted"
+                })
+            } else {
+                if (date >= booking.startDate) {
+                    
+                }
+           }
+        
 
-        if (date >= bookingToDelete.startDate) {
-            return res.status(400).json({
-                message: 'Your booking has already been confirmed and cannot be deleted ',
-            });
         }
-
-        await bookingToDelete.destroy();
-        return res.status(200).json({
-            message: 'Your booking has successfully been deleted',
-        });
     } catch (error) {
-        return res.status(404).json({
-            message: 'Booking was not found',
-        });
+     return res.status(404).json({ message: 'Booking not found' }) ;
     }
 });
 
