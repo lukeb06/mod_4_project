@@ -4,34 +4,36 @@ const { setTokenCookie, restoreUser, requireAuth } = require('../../utils/auth')
 const { handleValidationErrors } = require('../../utils/validation');
 const { Booking, Spot, SpotImage, sequelize } = require('../../db/models');
 const router = express.Router();
+const { Booking } = require('../../db/models');
 
 // DELETE A BOOKING
 router.delete('/:bookingId', requireAuth, async (req, res, next) => {
     try {
-        const bookingId = req.params.id;
+        const { bookingId } = req.params;
+
         const bookingToDelete = await Booking.findOne({
             where: {
                 id: bookingId,
             },
         });
-        const date = new Date();
 
-        if (bookingToDelete) {
-            if (req.user.id === booking.userId) {
-                await bookingToDelete.destroy();
-                res.status(200).json({
-                    message: 'Your booking has successfully been deleted',
-                });
-            }
-            if (date >= booking.startDate) {
-                res.status(400).json({
-                    message: 'Your booking has already been confirmed and cannot be deleted ',
-                });
-            }
+        if (!bookingToDelete) return res.status(404).json({ message: 'Booking not found' });
+        if (req.user.id !== bookingToDelete.userId)
+            return res.status(403).json({ message: 'Forbidden' });
+
+        if (date >= bookingToDelete.startDate) {
+            return res.status(400).json({
+                message: 'Your booking has already been confirmed and cannot be deleted ',
+            });
         }
+
+        await bookingToDelete.destroy();
+        return res.status(200).json({
+            message: 'Your booking has successfully been deleted',
+        });
     } catch (error) {
-        res.status(404).json({
-            message: 'booking was not found',
+        return res.status(404).json({
+            message: 'Booking was not found',
         });
     }
 });
@@ -76,4 +78,3 @@ router.get('/current', async (req, res, next) => {
 })
 
 module.exports = router;
-

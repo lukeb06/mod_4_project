@@ -8,7 +8,9 @@
         "typescript": "^5.7.3",
         "undici-types": "^6.20.0"
     },
-    "devDependencies": {},
+    "devDependencies": {
+        "prettier": "^3.4.2"
+    },
     "scripts": {
         "install": "npm --prefix backend install backend",
         "dev:backend": "npm install --prefix backend start",
