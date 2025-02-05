@@ -1,7 +1,7 @@
 const express = require('express');
 const { requireAuth } = require('../../utils/auth');
+const { Booking, Spot, SpotImage, sequelize } = require('../../db/models');
 const router = express.Router();
-const { Booking } = require('../../db/models');
 
 // DELETE A BOOKING
 router.delete('/:bookingId', requireAuth, async (req, res, next) => {
@@ -31,6 +31,38 @@ router.delete('/:bookingId', requireAuth, async (req, res, next) => {
     } catch (error) {
         return res.status(404).json({
             message: 'Booking was not found',
+        });
+    }
+});
+
+//  RETURN ALL OF THE BOOKINGS OF CURRENT USER
+router.get('/current', requireAuth, async (req, res, next) => {
+    try {
+        const currentBooking = await Booking.findAll({
+            where: {
+                userId: req.user.id,
+            },
+            include: [
+                {
+                    model: Spot,
+                    attributes: {
+                        include: [[sequelize.fn('MAX', sequelize.col('url')), 'previewImage']],
+                        exclude: ['description', 'createdAt', 'updatedAt'],
+                    },
+                    include: [
+                        {
+                            model: SpotImage,
+                            attributes: ['url'],
+                        },
+                    ],
+                },
+            ],
+        });
+
+        return res.json(currentBooking);
+    } catch (error) {
+        res.status(400).json({
+            message: error.message,
         });
     }
 });
