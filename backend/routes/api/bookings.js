@@ -4,7 +4,7 @@ const { setTokenCookie, restoreUser, requireAuth } = require('../../utils/auth')
 const { handleValidationErrors } = require('../../utils/validation');
 const { Booking, Spot, SpotImage, sequelize } = require('../../db/models');
 const router = express.Router();
-const { Booking } = require('../../db/models');
+
 
 // DELETE A BOOKING
 router.delete('/:bookingId', requireAuth, async (req, res, next) => {
@@ -41,11 +41,11 @@ router.delete('/:bookingId', requireAuth, async (req, res, next) => {
 
 //  RETURN ALL OF THE BOOKINGS OF CURRENT USER
 
-router.get('/current', async (req, res, next) => {
+router.get('/current', requireAuth, async (req, res, next) => {
     try {
         const currentBooking = await Booking.findAll({
             where: {
-                userId: 1
+                userId: req.user.id
             },
             include: [
                 {
@@ -54,17 +54,12 @@ router.get('/current', async (req, res, next) => {
                         include: [[sequelize.fn('MAX', sequelize.col('url')), 'previewImage']],
                         exclude: ['description', 'createdAt', 'updatedAt'],
                     },
-                },
-                {
-                    model: Booking,
-                    attributes: ['id', 'spotId', 'userId', 'startDate', 'endDate', 'createdAt', "updatedAt"] 
-                    
-                },
-                {
-                    model: SpotImage,
-                    attributes: ['url']
-                }
+                    include: [{
+                        model: SpotImage,
+                        attributes: [ 'url' ]
 
+                    }]
+                },
             ],
         })
 
