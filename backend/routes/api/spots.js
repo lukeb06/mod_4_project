@@ -337,7 +337,7 @@ router.get('/:spotId/reviews', async (req, res) => {
     res.status(200).json({ spotReviews });
 });
 
-router.get('/:spotId/bookings', async (req, res) => {
+router.get('/:spotId/bookings', requireAuth, async (req, res) => {
     try {
         const { spotId } = req.params;
 
@@ -357,7 +357,7 @@ router.get('/:spotId/bookings', async (req, res) => {
             ],
         });
 
-        if (spot.ownerId === req.user?.id) {
+        if (spot.ownerId === req.user.id) {
             return res.json(bookings);
         } else {
             return res.json(
