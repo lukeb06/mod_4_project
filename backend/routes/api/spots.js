@@ -199,9 +199,9 @@ router.get('/current', requireAuth, async (req, res) => {
 
 // EDIT A SPOT
 
-router.put('/:spotId', requireAuth, validateCreateSpot, async (req, res, next) => {
+router.put('/:spotId', async (req, res, next) => {
     try {
-        const { spotId } = req.params.id;
+        const { spotId } = 1;
         const { address, city, state, country, lat, lng, name, description, price } = req.body;
 
         const spotToUpdate = await Spot.findByPk(spotId);
@@ -376,5 +376,34 @@ router.get('/:spotId/bookings', requireAuth, async (req, res) => {
         });
     }
 });
+//ADD AN IMAGE TO A SPOT BASED ON THE SPOTS ID
+router.post('/:spotId/images',  async (req, res, next) => {
+    try {
+        const id = 1;
+        const spotId = parseInt(id);
+       const { url } = req.body;
+    const spot = await Spot.findByPk(spotId);
+       
+       if (spot) {
+           if (req.user.id === spot.ownerId) {
+               const image = await SpotImage.create({
+                   url,
+                   spotId,
+            })
+               res.status(201).json({ image });
+           }
+       } else {
+           return res.status(404).json({
+               message: "Spot does not exist with the provided id"
+           })
+       }
+           
+    
+    
+       
+   } catch (error) {
+    
+   }
+})
 
 module.exports = router;
