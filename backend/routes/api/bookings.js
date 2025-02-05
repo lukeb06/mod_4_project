@@ -11,10 +11,11 @@ const router = express.Router();
 router.delete('/:bookingId', async (req, res, next) => {
     try {
         const { bookingId } = req.params;
+        const parsedBookingId = parseInt(bookingId)
 
         const bookingToDelete = await Booking.findOne({
             where: {
-                id: bookingId,
+                id: parsedBookingId,
             },
         });
         const date = new Date();
@@ -26,8 +27,10 @@ router.delete('/:bookingId', async (req, res, next) => {
                     message: "booking was successfully deleted"
                 })
             } else {
-                if (date >= booking.startDate) {
-                    
+                if (date >= bookingToDelete.startDate) {
+                     return res.status(400).json({
+                message: 'Your booking has already been confirmed and cannot be deleted ',
+            });
                 }
            }
         

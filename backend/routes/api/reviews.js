@@ -4,6 +4,8 @@ const router = express.Router();
 const { Review, Spot, ReviewImage, User, sequelize } = require('../../db/models');
 const { requireAuth } = require('../../utils/auth');
 
+
+
 router.get('/current', requireAuth, async (req, res) => {
     try {
         const reviews = await Review.findAll({
@@ -60,5 +62,24 @@ router.delete('/:reviewId', requireAuth, async (req, res) => {
         });
     }
 });
+
+
+//EDIT A REVIEW
+router.put('/:reviewId', requireAuth, async (req, res, next) => {
+    const { reviewId } = req.params
+    const { review, stars } = req.body;
+    const editReview = await Review.findByPk(reviewId);
+
+    if (!editReview) return res.status(404).json({ message: "Review was not found" })
+    if (editReview.userId !== req.user.id) {
+        return res.status(403).json({
+            message: 'You are not authorized to edit this review.'
+        })
+    };
+    editReview.review = review;
+    editReview.stars = stars;
+    await editReview.save();
+    return res.status(200).json(editReview);
+})
 
 module.exports = router;
