@@ -62,7 +62,34 @@ router.delete('/:reviewId', requireAuth, async (req, res) => {
 });
 // ADD IMAGE TO REVIEW BASED ON REVIEWID
 router.post('/reviewId/images', requireAuth, async (req, res, next) => {
+    const { url } = req.body;
+    let { reviewId } = req.params;
+    const reviewImagesCount = await ReviewImage.count({
+        where: {
+            reviewId
+        },
+        attributes: {
+            url
+        }
+    })
     
+    const review = await Review.findByPk(reviewId);
+    if (review) {
+        if (req.user.id === review.userId) {
+            if (reviewImagesCount >= 10) {
+                res.status(400).json({
+                    message: "Maximum number of images has been reached"
+                })
+            } else {
+                const image = Image.create({
+                    url,
+                    id
+                });
+
+                return res.json(image);
+            }
+        }
+    }
 })
 
 module.exports = router;

@@ -8,12 +8,8 @@ router.delete('/:bookingId', requireAuth, async (req, res, next) => {
     try {
         const { bookingId } = req.params;
 
-        const bookingToDelete = await Booking.findOne({
-            where: {
-                id: bookingId,
-            },
-        });
-
+        const bookingToDelete = await Booking.findByPk(bookingId);
+        const date = new Date();
         if (!bookingToDelete) return res.status(404).json({ message: 'Booking not found' });
         if (req.user.id !== bookingToDelete.userId)
             return res.status(403).json({ message: 'Forbidden' });
@@ -29,8 +25,8 @@ router.delete('/:bookingId', requireAuth, async (req, res, next) => {
             message: 'Your booking has successfully been deleted',
         });
     } catch (error) {
-        return res.status(404).json({
-            message: 'Booking was not found',
+        return res.status(400).json({
+            message: error.message,
         });
     }
 });

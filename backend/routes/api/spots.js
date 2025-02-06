@@ -199,9 +199,9 @@ router.get('/current', requireAuth, async (req, res) => {
 
 // EDIT A SPOT
 
-router.put('/:spotId', requireAuth, validateCreateSpot, async (req, res, next) => {
+router.put('/:spotId',requireAuth, validateCreateSpot, async (req, res, next) => {
     try {
-        const { spotId } = req.params.id;
+        const { spotId } = req.params;
         const { address, city, state, country, lat, lng, name, description, price } = req.body;
 
         const spotToUpdate = await Spot.findByPk(spotId);
