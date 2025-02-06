@@ -40,7 +40,6 @@ router.delete('/:bookingId', requireAuth, async (req, res, next) => {
 });
 
 //  RETURN ALL OF THE BOOKINGS OF CURRENT USER
-
 router.get('/current', requireAuth, async (req, res, next) => {
     try {
         const currentBooking = await Booking.findAll({

@@ -9,6 +9,8 @@
         "undici-types": "^6.20.0"
     },
     "devDependencies": {
+        "husky": "^9.1.7",
+        "lint-staged": "^15.4.3",
         "prettier": "^3.4.2"
     },
     "scripts": {
@@ -18,7 +20,7 @@
         "sequelize-cli": "npm run --prefix backend sequelize-cli",
         "start": "npm start --prefix backend",
         "build": "npm run --prefix backend build",
-        "format": "prettier . --write"
+        "prepare": "husky install"
     },
     "keywords": [],
     "author": "",
