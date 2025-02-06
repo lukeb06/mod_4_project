@@ -5,30 +5,31 @@ const router = express.Router();
 
 // DELETE A BOOKING
 router.delete('/:bookingId', requireAuth, async (req, res, next) => {
-    try {
-        const { bookingId } = req.params;
+    const { bookingId } = req.params;
 
-        const bookingToDelete = await Booking.findByPk(bookingId);
-        const date = new Date();
-        if (!bookingToDelete) return res.status(404).json({ message: 'Booking not found' });
-        if (req.user.id !== bookingToDelete.userId)
-            return res.status(403).json({ message: 'Forbidden' });
+    const bookingToDelete = await Booking.findByPk(bookingId);
+    if (!bookingToDelete) return res.status(404).json({ message: 'Booking not found' });
 
-        if (date >= bookingToDelete.startDate) {
-            return res.status(400).json({
-                message: 'Your booking has already been confirmed and cannot be deleted ',
-            });
-        }
+    if (req.user.id !== bookingToDelete.userId)
+        return res.status(403).json({ message: 'Forbidden' });
 
-        await bookingToDelete.destroy();
-        return res.status(200).json({
-            message: 'Your booking has successfully been deleted',
-        });
-    } catch (error) {
+    const date = new Date();
+    if (date >= bookingToDelete.startDate) {
         return res.status(400).json({
-            message: error.message,
+            message: 'Your booking has already been confirmed and cannot be deleted ',
         });
     }
+
+    if (bookingToDelete.userId !== req.user.id) {
+        return res.status(400).json({
+            message: 'You are not authorized to delete this booking',
+        });
+    }
+
+    await bookingToDelete.destroy();
+    res.status.json({
+        message: 'booking was successfully deleted',
+    });
 });
 
 //  RETURN ALL OF THE BOOKINGS OF CURRENT USER
