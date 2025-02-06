@@ -60,5 +60,9 @@ router.delete('/:reviewId', requireAuth, async (req, res) => {
         });
     }
 });
+// ADD IMAGE TO REVIEW BASED ON REVIEWID
+router.post('/reviewId/images', requireAuth, async (req, res, next) => {
+    
+})
 
 module.exports = router;
