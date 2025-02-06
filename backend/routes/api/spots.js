@@ -431,6 +431,10 @@ router.post('/:spotId/bookings', requireAuth, async (req, res) => {
             }
         })
 
+        if (userId == spot.ownerId) {
+            throw new Error('You cannot book your own spot. Please choose a different spot')
+        }
+
         const newBooking = await Booking.create({
             spotId,
             userId,
@@ -439,6 +443,7 @@ router.post('/:spotId/bookings', requireAuth, async (req, res) => {
         })
 
         return res.json(newBooking)
+        
         
 
     } catch (error) {
