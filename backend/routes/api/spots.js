@@ -281,7 +281,7 @@ router.post('/:spotId/reviews', requireAuth, validateCreateReview, async (req, r
     res.status(201).json({ newReview });
 });
 
-router.delete('/:spotId', requireAuth, async (req, res) => {
+router.delete('/:spotId', async (req, res) => {
     const { spotId } = req.params;
     const spotToDelete = await Spot.findByPk(spotId);
 
@@ -298,7 +298,7 @@ router.delete('/:spotId', requireAuth, async (req, res) => {
     }
 
     await spotToDelete.destroy();
-    return res.status(200).json({
+    return res.json({
         message: 'Successfully deleted',
     });
 });
