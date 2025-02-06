@@ -7,8 +7,8 @@ const {
     SpotImage,
     Review,
     ReviewImage,
-    sequelize,
     Booking,
+    sequelize,
 } = require('../../db/models');
 const { check } = require('express-validator');
 const { handleValidationErrors } = require('../../utils/validation');
@@ -46,6 +46,70 @@ const validateCreateSpot = [
         .withMessage('Price per day must be a positive number'),
     handleValidationErrors,
 ];
+
+// Get detail for a spot from an Id
+router.get('/:spotId', async (req, res) => {
+    try {
+        const spotId = req.params.spotId;
+
+        const reviews = await Review.findAll({
+            where: {
+                spotId
+            },
+            attributes: [
+                [sequelize.fn('COUNT', sequelize.col('id')), 'numReviews'],
+                [sequelize.fn('AVG', sequelize.col('stars')), 'avgStarRating'],
+            ]
+        })
+
+        const spot = await Spot.findByPk(spotId, {
+            include: [
+                {
+                    model: SpotImage,
+                    attributes: ['id', 'url', 'preview'],
+                },
+                {
+                    model: User,
+                    as: 'Owner',
+                    attributes: ['id', 'firstName', 'lastName'],
+                },
+            ],
+        });
+
+        if (!spot) {
+            return res.status(404).json({
+                message: "Spot couldn't be found",
+            });
+        }
+
+        const result = {
+            id: spot.id,
+            ownerId: spot.ownerId,
+            address :spot.address,
+            city: spot.city,
+            state: spot.state,
+            country: spot.country,
+            lat: spot.lat,
+            lng: spot.lng,
+            name: spot.name,
+            description: spot.description,
+            price: spot.price,
+            createdAt: spot.createdAt,
+            updatedAt:spot.updatedAt,
+            numReviews: reviews[0].get('numReviews'),
+            avgStarRating: reviews[0].get('avgStarRating'),
+            SpotImages: spot.SpotImages,
+            Owner: spot.Owner
+        }
+
+        return res.status(200).json(result);
+        
+    } catch (error) {
+        res.status(500).json({
+            message: error.message
+        })
+    }
+});
 
 // Create a spot
 router.post('/', requireAuth, validateCreateSpot, async (req, res) => {
@@ -199,35 +263,38 @@ router.get('/current', requireAuth, async (req, res) => {
 
 // EDIT A SPOT
 
-router.put('/:spotId', requireAuth, validateCreateSpot, async (req, res, next) => {
+router.put('/:spotId',requireAuth, validateCreateSpot, async (req, res, next) => {
     try {
-        const { spotId } = req.params.id;
+        const { spotId } = req.params;
         const { address, city, state, country, lat, lng, name, description, price } = req.body;
 
         const spotToUpdate = await Spot.findByPk(spotId);
 
         if (!spotToUpdate) {
-            res.status(400).json({
+            return res.status(400).json({
                 message: 'Not a valid spot',
             });
         }
-        if (req.user.id === spotToUpdate.ownerId) {
-            await spotToUpdate.update({
-                address: address,
-                city: city,
-                state: state,
-                country: country,
-                lat: lat,
-                lng: lng,
-                name: name,
-                description: description,
-                price: price,
+        if (req.user.id !== spotToUpdate.ownerId) {
+            return res.status(403).json({
+                message: 'You do not own this spot',
             });
-            res.json(spotToUpdate);
-            res.status(200);
         }
+        await spotToUpdate.update({
+            address: address,
+            city: city,
+            state: state,
+            country: country,
+            lat: lat,
+            lng: lng,
+            name: name,
+            description: description,
+            price: price,
+        });
+        return res.status(200).res.json(spotToUpdate);
     } catch (error) {
-        res.status(404).json({
+        console.error(error);
+        return res.status(404).json({
             message: 'Spot was not found',
         });
     }
@@ -301,7 +368,7 @@ router.delete('/:spotId', requireAuth, async (req, res) => {
     }
 
     await spotToDelete.destroy();
-    return res.status(200).json({
+    return res.json({
         message: 'Successfully deleted',
     });
 });
@@ -377,7 +444,6 @@ router.get('/:spotId/bookings', requireAuth, async (req, res) => {
     }
 });
 
-
 //ADD AN IMAGE TO A SPOT BASED ON THE SPOT'S ID
 router.post('/:spotId/images', requireAuth, async (req, res, next) => {
     const { spotId } = req.params;
@@ -404,5 +470,82 @@ router.post('/:spotId/images', requireAuth, async (req, res, next) => {
         preview: image.preview
    });
 
-})
+});
+
+// Create a booking for a spot based on the Spot's id
+router.post('/:spotId/bookings', requireAuth, async (req, res) => {
+    try {
+        const spotId = parseInt(req.params.spotId);
+        const userId = req.user.id
+        const { startDate, endDate } = req.body;
+        const spot = await Spot.findByPk(spotId);
+        const currentDate = new Date()
+
+        const bookings = await Booking.findAll({
+            where : {
+                spotId
+            }
+        });
+
+        if (!spot) {
+            res.status(404).json({
+                message: "Spot couldn't be found",
+            });
+        }
+
+        if (new Date(startDate) < currentDate) {
+            res.status(400).json({
+                message: "Bad Request",
+                error: 'startDate cannot be in the past'
+            })
+        }
+
+        if (new Date(endDate) < new Date(startDate)) {
+            res.status(400).json({
+                message: "Bad Request",
+                error: 'endDate cannot be on or before startDate'
+            })
+        }
+        
+        bookings.forEach((booking) => {
+            let prevStartDate = booking.startDate;
+            prevStartDate = prevStartDate.toISOString().split('T')[0]
+
+            let prevEndDate = booking.endDate;
+            prevEndDate = prevEndDate.toISOString().split('T')[0]
+
+            if (startDate === prevStartDate) {
+                const error = new Error('Start date conflicts with an existing booking')
+                error.status = 403
+                throw error
+            }  
+            if (endDate === prevEndDate) {
+                const error = new Error('End date conflicts with an existing booking')
+                error.status = 403
+                throw error
+            }
+        })
+
+        if (userId == spot.ownerId) {
+            throw new Error('You cannot book your own spot. Please choose a different spot')
+        }
+
+        const newBooking = await Booking.create({
+            spotId,
+            userId,
+            startDate,
+            endDate
+        })
+
+        return res.json(newBooking)
+        
+        
+
+    } catch (error) {
+        res.status(error.status || 500).json({
+            message: error.message,
+        });
+    }
+});
+
 module.exports = router;
