@@ -1,7 +1,15 @@
 const express = require('express');
 
 const { requireAuth } = require('../../utils/auth');
-const { User, Spot, SpotImage, Review, ReviewImage, sequelize } = require('../../db/models');
+const {
+    User,
+    Spot,
+    SpotImage,
+    Review,
+    ReviewImage,
+    Booking,
+    sequelize,
+} = require('../../db/models');
 const { check } = require('express-validator');
 const { handleValidationErrors } = require('../../utils/validation');
 const router = express.Router();
@@ -196,7 +204,6 @@ router.put('/:spotId', requireAuth, async (req, res, next) => {
         const { spotId } = req.params;
         const { address, city, state, country, lat, lng, name, description, price } = req.body;
 
-       
         const spotToUpdate = await Spot.findByPk(spotId);
 
         if (!spotToUpdate) {
@@ -206,22 +213,21 @@ router.put('/:spotId', requireAuth, async (req, res, next) => {
         }
         if (req.user.id !== spotToUpdate.ownerId) {
             return res.status(403).json({
-                message: 'You do not own this spot'
-            })
-        }
-            await spotToUpdate.update({
-                address: address,
-                city: city,
-                state: state,
-                country: country,
-                lat: lat,
-                lng: lng,
-                name: name,
-                description: description,
-                price: price,
+                message: 'You do not own this spot',
             });
-           return res.status(200).res.json(spotToUpdate);
-        
+        }
+        await spotToUpdate.update({
+            address: address,
+            city: city,
+            state: state,
+            country: country,
+            lat: lat,
+            lng: lng,
+            name: name,
+            description: description,
+            price: price,
+        });
+        return res.status(200).res.json(spotToUpdate);
     } catch (error) {
         console.error(error);
         return res.status(404).json({
@@ -281,7 +287,7 @@ router.post('/:spotId/reviews', requireAuth, validateCreateReview, async (req, r
     res.status(201).json({ newReview });
 });
 
-router.delete('/:spotId', async (req, res) => {
+router.delete('/:spotId', requireAuth, async (req, res) => {
     const { spotId } = req.params;
     const spotToDelete = await Spot.findByPk(spotId);
 
@@ -332,6 +338,46 @@ router.get('/:spotId/reviews', async (req, res) => {
     }
 
     res.status(200).json({ spotReviews });
+});
+
+router.get('/:spotId/bookings', requireAuth, async (req, res) => {
+    try {
+        const { spotId } = req.params;
+
+        const spot = await Spot.findByPk(spotId);
+
+        if (!spot) return res.status(404).json({ message: "Spot couldn't be found" });
+
+        const bookings = await Booking.findAll({
+            where: {
+                spotId,
+            },
+            include: [
+                {
+                    model: User,
+                    attributes: ['id', 'firstName', 'lastName'],
+                },
+            ],
+        });
+
+        if (spot.ownerId === req.user.id) {
+            return res.json(bookings);
+        } else {
+            return res.json(
+                bookings.map(booking => {
+                    return {
+                        spotId: booking.spotId,
+                        startDate: booking.startDate,
+                        endDate: booking.endDate,
+                    };
+                }),
+            );
+        }
+    } catch (error) {
+        res.status(500).json({
+            message: error.message,
+        });
+    }
 });
 
 module.exports = router;

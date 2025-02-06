@@ -1,46 +1,43 @@
 const express = require('express');
-const { check } = require('express-validator');
-const { setTokenCookie, restoreUser, requireAuth } = require('../../utils/auth');
-const { handleValidationErrors } = require('../../utils/validation');
+const { requireAuth } = require('../../utils/auth');
 const { Booking, Spot, SpotImage, sequelize } = require('../../db/models');
-const booking = require('../../db/models/booking');
 const router = express.Router();
 
-
 // DELETE A BOOKING
-router.delete('/:bookingId', async (req, res, next) => {
-    try {
-        const { bookingId } = req.params;
-        const parsedBookingId = parseInt(bookingId)
+router.delete('/:bookingId', requireAuth, async (req, res, next) => {
+    const { bookingId } = req.params;
+    const parsedBookingId = parseInt(bookingId);
 
-        const bookingToDelete = await Booking.findOne({
-            where: {
-                id: parsedBookingId,
-            },
+    const bookingToDelete = await Booking.findOne({
+        where: {
+            id: parsedBookingId,
+        },
+    });
+    const date = new Date();
+
+    if (!bookingToDelete) {
+        return res.status(404).json({
+            message: 'Booking not found',
         });
-        const date = new Date();
-
-        if (bookingToDelete) {
-            if (req.user.id === booking.userId) {
-                booking.destroy();
-                res.status.json({
-                    message: "booking was successfully deleted"
-                })
-            } else {
-                if (date >= bookingToDelete.startDate) {
-                     return res.status(400).json({
-                message: 'Your booking has already been confirmed and cannot be deleted ',
-            });
-                }
-           }
-        
-
-        }
-    } catch (error) {
-     return res.status(404).json({ message: 'Booking not found' }) ;
     }
-});
 
+    if (date >= bookingToDelete.startDate) {
+        return res.status(400).json({
+            message: 'Your booking has already been confirmed and cannot be deleted ',
+        });
+    }
+
+    if (bookingToDelete.userId !== req.user.id) {
+        return res.status(400).json({
+            message: 'You are not authorized to delete this booking',
+        });
+    }
+
+    await bookingToDelete.destroy();
+    res.status.json({
+        message: 'booking was successfully deleted',
+    });
+});
 
 //  RETURN ALL OF THE BOOKINGS OF CURRENT USER
 
@@ -48,7 +45,7 @@ router.get('/current', requireAuth, async (req, res, next) => {
     try {
         const currentBooking = await Booking.findAll({
             where: {
-                userId: req.user.id
+                userId: req.user.id,
             },
             include: [
                 {
@@ -57,22 +54,22 @@ router.get('/current', requireAuth, async (req, res, next) => {
                         include: [[sequelize.fn('MAX', sequelize.col('url')), 'previewImage']],
                         exclude: ['description', 'createdAt', 'updatedAt'],
                     },
-                    include: [{
-                        model: SpotImage,
-                        attributes: [ 'url' ]
-
-                    }]
+                    include: [
+                        {
+                            model: SpotImage,
+                            attributes: ['url'],
+                        },
+                    ],
                 },
             ],
-        })
+        });
 
-        
-        return res.json( currentBooking )
+        return res.json(currentBooking);
     } catch (error) {
         res.status(400).json({
-            message: error.message
-        })
+            message: error.message,
+        });
     }
-})
+});
 
 module.exports = router;
