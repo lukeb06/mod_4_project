@@ -263,7 +263,7 @@ router.get('/current', requireAuth, async (req, res) => {
 
 // EDIT A SPOT
 
-router.put('/:spotId', requireAuth, async (req, res, next) => {
+router.put('/:spotId',requireAuth, validateCreateSpot, async (req, res, next) => {
     try {
         const { spotId } = req.params;
         const { address, city, state, country, lat, lng, name, description, price } = req.body;
