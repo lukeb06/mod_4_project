@@ -444,6 +444,34 @@ router.get('/:spotId/bookings', requireAuth, async (req, res) => {
     }
 });
 
+//ADD AN IMAGE TO A SPOT BASED ON THE SPOT'S ID
+router.post('/:spotId/images', requireAuth, async (req, res, next) => {
+    const { spotId } = req.params;
+    const { url } = req.body;
+    const userId = req.user.id;
+    
+    const spot = await Spot.findByPk(spotId);
+
+    if (!spot) return res.status(404).json({ message: "Spot couldn't be found" })
+    if (spot.ownerId !== userId) {
+        return res.status(403).json({ 
+            message: "You are not the owner of this spot"
+        })
+    }
+
+    const image = await SpotImage.create({
+        spotId,
+        url,
+        preview
+    })
+    return res.status(201).json({
+        id: image.id,
+        url: image.url,
+        preview: image.preview
+   });
+
+});
+
 // Create a booking for a spot based on the Spot's id
 router.post('/:spotId/bookings', requireAuth, async (req, res) => {
     try {
