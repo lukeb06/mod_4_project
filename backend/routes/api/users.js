@@ -29,22 +29,64 @@ const validateSignup = [
 // Sign up
 router.post('/', validateSignup, async (req, res) => {
     const { email, password, username, firstName, lastName } = req.body;
-    const hashedPassword = bcrypt.hashSync(password);
-    const user = await User.create({ email, username, firstName, lastName, hashedPassword });
 
-    const safeUser = {
-        id: user.id,
-        email: user.email,
-        username: user.username,
-        firstName: user.firstName,
-        lastName: user.lastName,
-    };
+    if (!email || !firstName || !lastName) {
+        return res.status(400).json({ 
+            message: "First name, email, and last name are required"
+        })
+    }
+    try {
 
-    await setTokenCookie(res, safeUser);
+        const existingEmail = await User.findOne(
+            {
+                where: {
+                    email
+                }
+            }
+        )
+        if (existingEmail) {
+            res.status(500).json({
+                message: "Email is already in use"
+            })
+        }
 
-    return res.json({
-        user: safeUser,
-    });
+        const existingUsername = await User.findOne(
+            {
+                where: {
+                    username
+                }
+            }
+        )
+        if (existingUsername) {
+            res.status(500).json({
+                message: "Username is already in use"
+            })
+        }
+
+        const hashedPassword = bcrypt.hashSync(password);
+        const user = await User.create({ email, username, firstName, lastName, hashedPassword });
+
+        const safeUser = {
+            id: user.id,
+            email: user.email,
+            username: user.username,
+            firstName: user.firstName,
+            lastName: user.lastName,
+        };
+
+        await setTokenCookie(res, safeUser);
+
+        return res.json({
+            user: safeUser,
+        });
+    } catch (err) {
+        return res.status(401).json({
+            message: "Invalid credentials were submitted."
+        })
+    }
 });
+ 
+
+
 
 module.exports = router;

@@ -78,4 +78,22 @@ router.get('/', (req, res) => {
     } else return res.json({ user: null });
 });
 
+
+//GET THE CURRENT USER
+router.get('/', restoreUser, (req, res) => {
+    if (!req.user) {
+        return res.status(200).json({ user: null });
+    }
+    const safeUser = {
+        id: req.user.id,
+        firstName: req.user.firstName,
+        lastname: req.user.lastName,
+        email: req.user.email,
+        username: req.user.username
+    };
+    return res.status(200).json({
+        user: safeUser
+    })
+})
+
 module.exports = router;
