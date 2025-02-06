@@ -7,8 +7,8 @@ const {
     SpotImage,
     Review,
     ReviewImage,
-    sequelize,
     Booking,
+    sequelize,
 } = require('../../db/models');
 const { check } = require('express-validator');
 const { handleValidationErrors } = require('../../utils/validation');
@@ -199,35 +199,38 @@ router.get('/current', requireAuth, async (req, res) => {
 
 // EDIT A SPOT
 
-router.put('/:spotId', requireAuth, validateCreateSpot, async (req, res, next) => {
+router.put('/:spotId', requireAuth, async (req, res, next) => {
     try {
-        const { spotId } = req.params.id;
+        const { spotId } = req.params;
         const { address, city, state, country, lat, lng, name, description, price } = req.body;
 
         const spotToUpdate = await Spot.findByPk(spotId);
 
         if (!spotToUpdate) {
-            res.status(400).json({
+            return res.status(400).json({
                 message: 'Not a valid spot',
             });
         }
-        if (req.user.id === spotToUpdate.ownerId) {
-            await spotToUpdate.update({
-                address: address,
-                city: city,
-                state: state,
-                country: country,
-                lat: lat,
-                lng: lng,
-                name: name,
-                description: description,
-                price: price,
+        if (req.user.id !== spotToUpdate.ownerId) {
+            return res.status(403).json({
+                message: 'You do not own this spot',
             });
-            res.json(spotToUpdate);
-            res.status(200);
         }
+        await spotToUpdate.update({
+            address: address,
+            city: city,
+            state: state,
+            country: country,
+            lat: lat,
+            lng: lng,
+            name: name,
+            description: description,
+            price: price,
+        });
+        return res.status(200).res.json(spotToUpdate);
     } catch (error) {
-        res.status(404).json({
+        console.error(error);
+        return res.status(404).json({
             message: 'Spot was not found',
         });
     }
@@ -301,7 +304,7 @@ router.delete('/:spotId', requireAuth, async (req, res) => {
     }
 
     await spotToDelete.destroy();
-    return res.status(200).json({
+    return res.json({
         message: 'Successfully deleted',
     });
 });
