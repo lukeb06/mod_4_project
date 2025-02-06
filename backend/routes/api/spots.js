@@ -377,4 +377,75 @@ router.get('/:spotId/bookings', requireAuth, async (req, res) => {
     }
 });
 
+// Create a booking for a spot based on the Spot's id
+router.post('/:spotId/bookings', async (req, res) => {
+    try {
+        const spotId = parseInt(req.params.spotId);
+        const userId = req.user.id
+        const { startDate, endDate } = req.body;
+        const spot = await Spot.findByPk(spotId);
+        const currentDate = new Date()
+
+        const bookings = await Booking.findAll({
+            where : {
+                spotId
+            }
+        });
+
+        if (!spot) {
+            res.status(404).json({
+                message: "Spot couldn't be found",
+            });
+        }
+
+        if (new Date(startDate) < currentDate) {
+            res.status(400).json({
+                message: "Bad Request",
+                error: 'startDate cannot be in the past'
+            })
+        }
+
+        if (new Date(endDate) < new Date(startDate)) {
+            res.status(400).json({
+                message: "Bad Request",
+                error: 'endDate cannot be on or before startDate'
+            })
+        }
+        
+        bookings.forEach((booking) => {
+            let prevStartDate = booking.startDate;
+            prevStartDate = prevStartDate.toISOString().split('T')[0]
+
+            let prevEndDate = booking.endDate;
+            prevEndDate = prevEndDate.toISOString().split('T')[0]
+
+            if (startDate === prevStartDate) {
+                const error = new Error('Start date conflicts with an existing booking')
+                error.status = 403
+                throw error
+            }  
+            if (endDate === prevEndDate) {
+                const error = new Error('End date conflicts with an existing booking')
+                error.status = 403
+                throw error
+            }
+        })
+
+        const newBooking = await Booking.create({
+            spotId,
+            userId,
+            startDate,
+            endDate
+        })
+
+        return res.json(newBooking)
+        
+
+    } catch (error) {
+        res.status(error.status || 500).json({
+            message: error.message,
+        });
+    }
+});
+
 module.exports = router;
