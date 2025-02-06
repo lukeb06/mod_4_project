@@ -47,6 +47,70 @@ const validateCreateSpot = [
     handleValidationErrors,
 ];
 
+// Get detail for a spot from an Id
+router.get('/:spotId', async (req, res) => {
+    try {
+        const spotId = req.params.spotId;
+
+        const reviews = await Review.findAll({
+            where: {
+                spotId
+            },
+            attributes: [
+                [sequelize.fn('COUNT', sequelize.col('id')), 'numReviews'],
+                [sequelize.fn('AVG', sequelize.col('stars')), 'avgStarRating'],
+            ]
+        })
+
+        const spot = await Spot.findByPk(spotId, {
+            include: [
+                {
+                    model: SpotImage,
+                    attributes: ['id', 'url', 'preview'],
+                },
+                {
+                    model: User,
+                    as: 'Owner',
+                    attributes: ['id', 'firstName', 'lastName'],
+                },
+            ],
+        });
+
+        if (!spot) {
+            return res.status(404).json({
+                message: "Spot couldn't be found",
+            });
+        }
+
+        const result = {
+            id: spot.id,
+            ownerId: spot.ownerId,
+            address :spot.address,
+            city: spot.city,
+            state: spot.state,
+            country: spot.country,
+            lat: spot.lat,
+            lng: spot.lng,
+            name: spot.name,
+            description: spot.description,
+            price: spot.price,
+            createdAt: spot.createdAt,
+            updatedAt:spot.updatedAt,
+            numReviews: reviews[0].get('numReviews'),
+            avgStarRating: reviews[0].get('avgStarRating'),
+            SpotImages: spot.SpotImages,
+            Owner: spot.Owner
+        }
+
+        return res.status(200).json(result);
+        
+    } catch (error) {
+        res.status(500).json({
+            message: error.message
+        })
+    }
+});
+
 // Create a spot
 router.post('/', requireAuth, validateCreateSpot, async (req, res) => {
     try {
