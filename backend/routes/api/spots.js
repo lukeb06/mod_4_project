@@ -311,8 +311,7 @@ const validateCreateReview = [
 ];
 
 router.post('/:spotId/reviews', requireAuth, validateCreateReview, async (req, res) => {
-    const id = req.params.spotId;
-    const spotId = parseInt(id);
+    const spotId = parseInt(req.params.spotId);
     const { review, stars, createdAt, updatedAt } = req.body;
     const userId = req.user.id;
 
@@ -339,7 +338,6 @@ router.post('/:spotId/reviews', requireAuth, validateCreateReview, async (req, r
     }
 
     const newReview = await Review.create({
-        id,
         userId,
         spotId,
         review,
