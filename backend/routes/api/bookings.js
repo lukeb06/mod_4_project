@@ -141,7 +141,7 @@ router.put('/:bookingId',requireAuth, async (req, res) => {
             throw new Error ('Forbidden')
         }
 
-        const bookingToUpdate = await Booking.update(
+        await Booking.update(
             {
                 startDate,
                 endDate
