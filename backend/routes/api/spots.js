@@ -291,7 +291,7 @@ router.put('/:spotId',requireAuth, validateCreateSpot, async (req, res, next) =>
             description: description,
             price: price,
         });
-        return res.status(200).res.json(spotToUpdate);
+        return res.status(200).json(spotToUpdate);
     } catch (error) {
         console.error(error);
         return res.status(404).json({
