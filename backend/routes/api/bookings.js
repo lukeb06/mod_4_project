@@ -12,7 +12,7 @@ router.delete('/:bookingId', requireAuth, async (req, res, next) => {
 
 
     const date = new Date();
-    if (date >= bookingToDelete.startDate) {
+    if (date <= bookingToDelete.startDate) {
         return res.status(400).json({
             message: 'Your booking has already been confirmed and cannot be deleted ',
         });
@@ -25,7 +25,7 @@ router.delete('/:bookingId', requireAuth, async (req, res, next) => {
     }
 
     await bookingToDelete.destroy();
-    res.status.json({
+    res.status(200).json({
         message: 'booking was successfully deleted',
     });
 });
