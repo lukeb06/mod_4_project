@@ -30,63 +30,46 @@ const validateSignup = [
 router.post('/', validateSignup, async (req, res) => {
     const { email, password, username, firstName, lastName } = req.body;
 
-    if (!email || !firstName || !lastName) {
-        return res.status(400).json({ 
-            message: "First name, email, and last name are required"
-        })
-    }
-    try {
+    const existingEmail = await User.findOne({
+        where: {
+            email,
+        },
+    });
 
-        const existingEmail = await User.findOne(
-            {
-                where: {
-                    email
-                }
-            }
-        )
-        if (existingEmail) {
-            res.status(500).json({
-                message: "Email is already in use"
-            })
-        }
+    const existingUsername = await User.findOne({
+        where: {
+            username,
+        },
+    });
 
-        const existingUsername = await User.findOne(
-            {
-                where: {
-                    username
-                }
-            }
-        )
-        if (existingUsername) {
-            res.status(500).json({
-                message: "Username is already in use"
-            })
-        }
+    if (existingEmail || existingUsername) {
+        const errors = {};
 
-        const hashedPassword = bcrypt.hashSync(password);
-        const user = await User.create({ email, username, firstName, lastName, hashedPassword });
+        if (existingEmail) errors.email = 'User with that email already exists';
+        if (existingUsername) errors.username = 'User with that username already exists';
 
-        const safeUser = {
-            id: user.id,
-            email: user.email,
-            username: user.username,
-            firstName: user.firstName,
-            lastName: user.lastName,
-        };
-
-        await setTokenCookie(res, safeUser);
-
-        return res.json({
-            user: safeUser,
+        return res.status(500).json({
+            message: 'User already exists',
+            errors,
         });
-    } catch (err) {
-        return res.status(401).json({
-            message: "Invalid credentials were submitted."
-        })
     }
+
+    const hashedPassword = bcrypt.hashSync(password);
+    const user = await User.create({ email, username, firstName, lastName, hashedPassword });
+
+    const safeUser = {
+        id: user.id,
+        email: user.email,
+        username: user.username,
+        firstName: user.firstName,
+        lastName: user.lastName,
+    };
+
+    setTokenCookie(res, safeUser);
+
+    return res.json({
+        user: safeUser,
+    });
 });
- 
-
-
 
 module.exports = router;

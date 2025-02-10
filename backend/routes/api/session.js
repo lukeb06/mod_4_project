@@ -32,13 +32,8 @@ router.post('/', validateLogin, async (req, res, next) => {
         },
     });
 
-    if (!user || !bcrypt.compareSync(password, user.hashedPassword.toString())) {
-        const err = new Error('Login failed');
-        err.status = 401;
-        err.title = 'Login failed';
-        err.errors = { credential: 'The provided credentials were invalid.' };
-        return next(err);
-    }
+    if (!user || !bcrypt.compareSync(password, user.hashedPassword.toString()))
+        return res.status(401).json({ message: 'Invalid credentials' });
 
     const safeUser = {
         id: user.id,
@@ -61,39 +56,19 @@ router.delete('/', (_req, res) => {
     return res.json({ message: 'success' });
 });
 
-// Restore session user
 router.get('/', (req, res) => {
     const { user } = req;
-    if (user) {
-        const safeUser = {
-            id: user.id,
-            firstName: user.firstName,
-            lastName: user.lastName,
-            email: user.email,
-            username: user.username,
-        };
+    if (user)
         return res.json({
-            user: safeUser,
+            user: {
+                id: user.id,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                email: user.email,
+                username: user.username,
+            },
         });
-    } else return res.json({ user: null });
+    else return res.json({ user: null });
 });
-
-
-//GET THE CURRENT USER
-router.get('/', restoreUser, (req, res) => {
-    if (!req.user) {
-        return res.status(200).json({ user: null });
-    }
-    const safeUser = {
-        id: req.user.id,
-        firstName: req.user.firstName,
-        lastname: req.user.lastName,
-        email: req.user.email,
-        username: req.user.username
-    };
-    return res.status(200).json({
-        user: safeUser
-    })
-})
 
 module.exports = router;
