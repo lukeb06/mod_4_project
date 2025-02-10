@@ -8,25 +8,25 @@ router.delete('/:bookingId', requireAuth, async (req, res, next) => {
     const { bookingId } = req.params;
 
     const bookingToDelete = await Booking.findByPk(bookingId);
-    if (!bookingToDelete) return res.status(404).json({ message: 'Booking not found' });
+    if (!bookingToDelete) return res.status(404).json({ message: "Booking couldn't be found" });
 
 
     const date = new Date();
     if (date <= bookingToDelete.startDate) {
         return res.status(400).json({
-            message: 'Your booking has already been confirmed and cannot be deleted ',
+            message: "Bookings that have been started can't be deleted",
         });
     }
 
     if (bookingToDelete.userId !== req.user.id) {
-        return res.status(400).json({
+        return res.status(403).json({
             message: 'You are not authorized to delete this booking',
         });
     }
 
     await bookingToDelete.destroy();
     res.status(200).json({
-        message: 'booking was successfully deleted',
+        message: 'Successfully deleted',
     });
 });
 
@@ -54,7 +54,7 @@ router.get('/current', requireAuth, async (req, res, next) => {
             ],
         });
 
-        return res.json(currentBooking);
+        return res.status(200).json(currentBooking);
     } catch (error) {
         res.status(400).json({
             message: error.message,

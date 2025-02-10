@@ -14,15 +14,14 @@ const validateLogin = [
     check('credential')
         .exists({ checkFalsy: true })
         .notEmpty()
-        .withMessage('Please provide a valid email or username.'),
-    check('password').exists({ checkFalsy: true }).withMessage('Please provide a password.'),
+        .withMessage('Email or username is required'),
+    check('password').exists({ checkFalsy: true }).withMessage('Password is required'),
     handleValidationErrors,
 ];
 
 // Log in
 router.post('/', validateLogin, async (req, res, next) => {
     const { credential, password } = req.body;
-
     const user = await User.unscoped().findOne({
         where: {
             [Op.or]: {
@@ -31,12 +30,9 @@ router.post('/', validateLogin, async (req, res, next) => {
             },
         },
     });
-
     if (!user || !bcrypt.compareSync(password, user.hashedPassword.toString())) {
-        const err = new Error('Login failed');
+        const err = new Error('Invalid credentials');
         err.status = 401;
-        err.title = 'Login failed';
-        err.errors = { credential: 'The provided credentials were invalid.' };
         return next(err);
     }
 
@@ -50,7 +46,7 @@ router.post('/', validateLogin, async (req, res, next) => {
 
     await setTokenCookie(res, safeUser);
 
-    return res.json({
+    return res.status(200).json({
         user: safeUser,
     });
 });

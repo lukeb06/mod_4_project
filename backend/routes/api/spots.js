@@ -209,7 +209,8 @@ router.post('/', requireAuth, validateCreateSpot, async (req, res) => {
     }
 });
 
-router.get('/', async (_, res) => {
+router.get('/', async (req, res) => {
+
     try {
         const spots = await Spot.findAll({
             attributes: [
@@ -243,7 +244,6 @@ router.get('/', async (_, res) => {
                 },
             ],
         });
-
         const spotsResponse = spots.map(spot => {
             return {
                 ...spot.dataValues,
@@ -459,8 +459,8 @@ router.post('/:spotId/images', requireAuth, async (req, res, next) => {
     const image = await SpotImage.create({
         spotId,
         url,
-        preview: false
-    })
+        preview: false,
+    });
     return res.status(201).json({
         id: image.id,
         url: image.url,
