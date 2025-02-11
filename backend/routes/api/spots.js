@@ -145,22 +145,22 @@ router.get('/:spotId', async (req, res) => {
 
     const result = {
         id: spot.id,
-            ownerId: spot.ownerId,
-            address: spot.address,
-            city: spot.city,
-            state: spot.state,
-            country: spot.country,
-            lat: spot.lat,
-            lng: spot.lng,
-            name: spot.name,
-            description: spot.description,
-            price: spot.price,
-            createdAt: formattedCreatedAt,
-            updatedAt: formattedUpdatedAt,
-            numReviews: reviews[0].get('numReviews'),
-            avgStarRating: reviews[0].get('avgStarRating'),
-            SpotImages: spot.SpotImages,
-            Owner: spot.Owner,
+        ownerId: spot.ownerId,
+        address: spot.address,
+        city: spot.city,
+        state: spot.state,
+        country: spot.country,
+        lat: spot.lat,
+        lng: spot.lng,
+        name: spot.name,
+        description: spot.description,
+        price: spot.price,
+        createdAt: formattedCreatedAt,
+        updatedAt: formattedUpdatedAt,
+        numReviews: reviews[0].get('numReviews'),
+        avgStarRating: reviews[0].get('avgStarRating'),
+        SpotImages: spot.SpotImages,
+        Owner: spot.Owner,
     };
 
     return res.status(200).json(result);
@@ -212,47 +212,45 @@ router.post('/', validateCreateSpot, async (req, res) => {
 });
 
 router.get('/', async (req, res) => {
-
-    try {
-        const spots = await Spot.findAll({
-            attributes: [
-                'id',
-                'ownerId',
-                'address',
-                'city',
-                'state',
-                'country',
-                'lat',
-                'lng',
-                'name',
-                'description',
-                'price',
-                'createdAt',
-                'updatedAt',
-                [sequelize.fn('MAX', sequelize.col('url')), 'previewImage'],
-                [sequelize.fn('AVG', sequelize.col('stars')), 'avgRating'],
-            ],
-            include: [
-                {
-                    model: SpotImage,
-                    attributes: ['url'],
-                    where: {
-                        preview: true,
-                    },
+    const spots = await Spot.findAll({
+        attributes: [
+            'id',
+            'ownerId',
+            'address',
+            'city',
+            'state',
+            'country',
+            'lat',
+            'lng',
+            'name',
+            'description',
+            'price',
+            'createdAt',
+            'updatedAt',
+            [sequelize.fn('MAX', sequelize.col('url')), 'previewImage'],
+            [sequelize.fn('AVG', sequelize.col('stars')), 'avgRating'],
+        ],
+        include: [
+            {
+                model: SpotImage,
+                attributes: ['url'],
+                where: {
+                    preview: true,
                 },
-                {
-                    model: Review,
-                    attributes: ['stars'],
-                },
-            ],
-        });
-        const spotsResponse = spots.map(spot => {
-            return {
-                ...spot.dataValues,
-                SpotImages: undefined,
-                Reviews: undefined,
-            };
-        });
+            },
+            {
+                model: Review,
+                attributes: ['stars'],
+            },
+        ],
+    });
+    const spotsResponse = spots.map(spot => {
+        return {
+            ...spot.dataValues,
+            SpotImages: undefined,
+            Reviews: undefined,
+        };
+    });
 
     return res.json(spotsResponse);
 });
@@ -300,60 +298,59 @@ const validateCreateReview = [
 ];
 
 router.post('/:spotId/reviews', requireAuth, validateCreateReview, async (req, res) => {
-    try {
-        const spotId = parseInt(req.params.spotId);
-        const { review, stars, createdAt, updatedAt } = req.body;
-        const userId = req.user.id;
+    const spotId = parseInt(req.params.spotId);
+    const { review, stars, createdAt, updatedAt } = req.body;
+    const userId = req.user.id;
 
-        // check if Spot does not exist
-        const spot = await Spot.findByPk(spotId);
-        if (!spot) {
-            return res.status(404).json({
-                message: "Spot couldn't be found",
-            });
-        }
-
-        // check if the review from current user already exists for the spot
-        const currentReview = await Review.findOne({
-            where: {
-                spotId,
-                userId,
-            },
+    // check if Spot does not exist
+    const spot = await Spot.findByPk(spotId);
+    if (!spot) {
+        return res.status(404).json({
+            message: "Spot couldn't be found",
         });
+    }
 
-        if (currentReview) {
-            return res.status(500).json({
-                message: 'User already has a review for this spot',
-            });
-        }
-
-        const newReview = await Review.create({
-            userId,
+    // check if the review from current user already exists for the spot
+    const currentReview = await Review.findOne({
+        where: {
             spotId,
-            review,
-            stars,
-            createdAt,
-            updatedAt,
-        });
+            userId,
+        },
+    });
 
-        const formattedCreatedAt = new Date(newReview.createdAt)
-            .toISOString()
-            .replace('T', ' ')
-            .slice(0, 19);
-        const formattedUpdatedAt = new Date(newReview.updatedAt)
-            .toISOString()
-            .replace('T', ' ')
-            .slice(0, 19);
-
-        return res.status(201).json({
-            id: newReview.id,
-            userId: newReview.userId,
-            spotId: newReview.spotId,
-            review: newReview.review,
-            stars: newReview.stars,
-            createdAt: formattedCreatedAt,
-            updatedAt: formattedUpdatedAt,
+    if (currentReview) {
+        return res.status(500).json({
+            message: 'User already has a review for this spot',
         });
+    }
+
+    const newReview = await Review.create({
+        userId,
+        spotId,
+        review,
+        stars,
+        createdAt,
+        updatedAt,
+    });
+
+    const formattedCreatedAt = new Date(newReview.createdAt)
+        .toISOString()
+        .replace('T', ' ')
+        .slice(0, 19);
+    const formattedUpdatedAt = new Date(newReview.updatedAt)
+        .toISOString()
+        .replace('T', ' ')
+        .slice(0, 19);
+
+    return res.status(201).json({
+        id: newReview.id,
+        userId: newReview.userId,
+        spotId: newReview.spotId,
+        review: newReview.review,
+        stars: newReview.stars,
+        createdAt: formattedCreatedAt,
+        updatedAt: formattedUpdatedAt,
+    });
 });
 
 router.delete('/:spotId', requireAuth, async (req, res) => {
