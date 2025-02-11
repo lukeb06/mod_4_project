@@ -93,7 +93,9 @@ router.get('/current', requireAuth, async (req, res) => {
             };
         });
 
-        return res.json(spotsResponse);
+        const response = { Spots: spotsResponse };
+
+        return res.json(response);
     } catch (error) {
         res.status(400).json({
             message: error.message,
@@ -136,6 +138,15 @@ router.get('/:spotId', async (req, res) => {
             });
         }
 
+        const formattedCreatedAt = new Date(spot.createdAt)
+            .toISOString()
+            .replace('T', ' ')
+            .slice(0, 19);
+        const formattedUpdatedAt = new Date(spot.updatedAt)
+            .toISOString()
+            .replace('T', ' ')
+            .slice(0, 19);
+
         const result = {
             id: spot.id,
             ownerId: spot.ownerId,
@@ -148,8 +159,8 @@ router.get('/:spotId', async (req, res) => {
             name: spot.name,
             description: spot.description,
             price: spot.price,
-            createdAt: spot.createdAt,
-            updatedAt: spot.updatedAt,
+            createdAt: formattedCreatedAt,
+            updatedAt: formattedUpdatedAt,
             numReviews: reviews[0].get('numReviews'),
             avgStarRating: reviews[0].get('avgStarRating'),
             SpotImages: spot.SpotImages,
@@ -197,10 +208,29 @@ router.post('/', requireAuth, validateCreateSpot, async (req, res) => {
             updatedAt,
         });
 
+        const formattedCreatedAt = new Date(newSpot.createdAt)
+            .toISOString()
+            .replace('T', ' ')
+            .slice(0, 19);
+        const formattedUpdatedAt = new Date(newSpot.updatedAt)
+            .toISOString()
+            .replace('T', ' ')
+            .slice(0, 19);
+
         res.status(201).json({
             id: newSpot.id,
             ownerId: newSpot.ownerId,
-            newSpot,
+            address: newSpot.address,
+            city: newSpot.city,
+            state: newSpot.state,
+            country: newSpot.country,
+            lat: newSpot.lat,
+            lng: newSpot.lng,
+            name: newSpot.name,
+            description: newSpot.description,
+            price: newSpot.price,
+            createdAt: formattedCreatedAt,
+            updatedAt: formattedUpdatedAt,
         });
     } catch (error) {
         res.status(400).json({
@@ -452,15 +482,15 @@ router.post('/:spotId/images', requireAuth, async (req, res, next) => {
     if (!spot) return res.status(404).json({ message: "Spot couldn't be found" });
     if (spot.ownerId !== userId) {
         return res.status(403).json({
-            message: 'You are not the owner of this spot',
+            message: 'Forbidden',
         });
     }
 
     const image = await SpotImage.create({
         spotId,
         url,
-        preview: false
-    })
+        preview: false,
+    });
     return res.status(201).json({
         id: image.id,
         url: image.url,
