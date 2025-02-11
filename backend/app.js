@@ -67,14 +67,18 @@ app.use((err, _req, _res, next) => {
 
 // Error formatter
 app.use((err, _req, res, _next) => {
-    res.status(err.status || 500);
+    const statusCode = err.status || 500;
     console.error(err);
-    res.json({
-        title: err.title || 'Server Error',
+    const errorResponse = {
         message: err.message,
         errors: err.errors,
-        stack: isProduction ? null : err.stack,
-    });
+    };
+    if (err.status !== 400) {
+        errorResponse.title = err.title || 'Server Error';
+        errorResponse.stack = isProduction ? null : err.stack;
+    }
+    res.status(statusCode).json(errorResponse)
 });
+
 
 module.exports = app;
