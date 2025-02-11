@@ -8,7 +8,7 @@ const { handleValidationErrors } = require('../../utils/validation');
 
 const checkValidateReview = [
     check('review').exists({ checkFalsy: true }).withMessage('Review text is required'),
-    check('stars').exists({ checkFalsy: true }).withMessage('stars must be an integer from 1 to 5'),
+    check('stars').exists({ checkFalsy: true }).withMessage('Stars must be an integer from 1 to 5'),
     handleValidationErrors,
 ];
 router.get('/current', requireAuth, async (req, res) => {
@@ -36,7 +36,9 @@ router.get('/current', requireAuth, async (req, res) => {
             ],
         });
 
-        return res.json(reviews);
+        const reviewReponse = { Reviews: reviews };
+
+        return res.json(reviewReponse);
     } catch (error) {
         res.status(400).json({
             message: error.message,
@@ -76,22 +78,25 @@ router.post('/:reviewId/images', requireAuth, async (req, res, next) => {
 
     const review = await Review.findByPk(reviewId);
     if (!review) {
-        return res.status(404).json({ message: 'Review not found' });
+        return res.status(404).json({ message: "Review cound't be found" });
     }
     if (req.user.id !== review.userId) {
         return res.status(403).json({
-            message: 'forbidden',
+            message: 'Forbidden',
         });
     }
     if (reviewImagesCount >= 10) {
-        return res.status(400).json({
-            message: 'Maximum number of images has been reached',
+        return res.status(403).json({
+            message: 'Maximum number of images for this resource was reached',
         });
     }
 
     const image = await ReviewImage.create({ url, reviewId });
 
-    return res.status(201).json(image);
+    return res.status(200).json({
+        id: image.id,
+        url: image.url,
+    });
 });
 
 //EDIT A REVIEW
@@ -103,16 +108,34 @@ router.put('/:reviewId', requireAuth, checkValidateReview, async (req, res, next
     }
     const editReview = await Review.findByPk(reviewId);
 
-    if (!editReview) return res.status(404).json({ message: 'Review was not found' });
+    if (!editReview) return res.status(404).json({ message: "Review couldn't be found" });
     if (editReview.userId !== req.user.id) {
         return res.status(403).json({
-            message: 'You are not authorized to edit this review.',
+            message: 'Forbidden',
         });
     }
     editReview.review = review;
     editReview.stars = stars;
     await editReview.save();
-    return res.status(200).json(editReview);
+
+    const formattedCreatedAt = new Date(editReview.createdAt)
+        .toISOString()
+        .replace('T', ' ')
+        .slice(0, 19);
+    const formattedUpdatedAt = new Date(editReview.updatedAt)
+        .toISOString()
+        .replace('T', ' ')
+        .slice(0, 19);
+
+    return res.status(200).json({
+        id: editReview.id,
+        userId: editReview.userId,
+        spotId: editReview.spotId,
+        review: editReview.review,
+        stars: editReview.stars,
+        createdAt: formattedCreatedAt,
+        updatedAt: formattedUpdatedAt,
+    });
 });
 
 module.exports = router;
