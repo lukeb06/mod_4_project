@@ -80,7 +80,7 @@ router.post('/:reviewId/images', requireAuth, async (req, res, next) => {
     }
     if (req.user.id !== review.userId) {
         return res.status(403).json({
-            message: 'forbidden',
+            message: 'Forbidden',
         });
     }
     if (reviewImagesCount >= 10) {
@@ -103,10 +103,10 @@ router.put('/:reviewId', requireAuth, checkValidateReview, async (req, res, next
     }
     const editReview = await Review.findByPk(reviewId);
 
-    if (!editReview) return res.status(404).json({ message: 'Review was not found' });
+    if (!editReview) return res.status(404).json({ message: "Review couldn't be found" });
     if (editReview.userId !== req.user.id) {
         return res.status(403).json({
-            message: 'You are not authorized to edit this review.',
+            message: 'Forbidden',
         });
     }
     editReview.review = review;

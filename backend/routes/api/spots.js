@@ -276,7 +276,7 @@ router.put('/:spotId', requireAuth, validateCreateSpot, async (req, res, next) =
         }
         if (req.user.id !== spotToUpdate.ownerId) {
             return res.status(403).json({
-                message: 'You do not own this spot',
+                message: "Forbidden",
             });
         }
         await spotToUpdate.update({
@@ -294,7 +294,7 @@ router.put('/:spotId', requireAuth, validateCreateSpot, async (req, res, next) =
     } catch (error) {
         console.error(error);
         return res.status(404).json({
-            message: 'Spot was not found',
+            message: "Spot couldn't be found",
         });
     }
 });
