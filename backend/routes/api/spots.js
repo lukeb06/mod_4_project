@@ -48,165 +48,133 @@ const validateCreateSpot = [
 ];
 
 router.get('/current', requireAuth, async (req, res) => {
-    try {
-        const spots = await Spot.findAll({
-            attributes: [
-                'id',
-                'ownerId',
-                'address',
-                'city',
-                'state',
-                'country',
-                'lat',
-                'lng',
-                'name',
-                'description',
-                'price',
-                'createdAt',
-                'updatedAt',
-                [sequelize.fn('MAX', sequelize.col('url')), 'previewImage'],
-                [sequelize.fn('AVG', sequelize.col('stars')), 'avgRating'],
-            ],
-            where: {
-                ownerId: req.user.id,
+    const spots = await Spot.findAll({
+        attributes: [
+            'id',
+            'ownerId',
+            'address',
+            'city',
+            'state',
+            'country',
+            'lat',
+            'lng',
+            'name',
+            'description',
+            'price',
+            'createdAt',
+            'updatedAt',
+            [sequelize.fn('MAX', sequelize.col('url')), 'previewImage'],
+            [sequelize.fn('AVG', sequelize.col('stars')), 'avgRating'],
+        ],
+        where: {
+            ownerId: req.user.id,
+        },
+        include: [
+            {
+                model: SpotImage,
+                attributes: ['url'],
+                where: {
+                    preview: true,
+                },
             },
-            include: [
-                {
-                    model: SpotImage,
-                    attributes: ['url'],
-                    where: {
-                        preview: true,
-                    },
-                },
-                {
-                    model: Review,
-                    attributes: ['stars'],
-                },
-            ],
-        });
+            {
+                model: Review,
+                attributes: ['stars'],
+            },
+        ],
+    });
 
-        const spotsResponse = spots.map(spot => {
-            return {
-                ...spot.dataValues,
-                SpotImages: undefined,
-                Reviews: undefined,
-            };
-        });
+    const spotsResponse = spots.map(spot => {
+        return {
+            ...spot.dataValues,
+            SpotImages: undefined,
+            Reviews: undefined,
+        };
+    });
 
-        return res.json(spotsResponse);
-    } catch (error) {
-        res.status(400).json({
-            message: error.message,
-        });
-    }
+    return res.json(spotsResponse);
 });
 
 // Get detail for a spot from an Id
 router.get('/:spotId', async (req, res) => {
-    try {
-        const spotId = req.params.spotId;
+    const { spotId } = req.params;
 
-        const reviews = await Review.findAll({
-            where: {
-                spotId,
+    const reviews = await Review.findAll({
+        where: {
+            spotId,
+        },
+        attributes: [
+            [sequelize.fn('COUNT', sequelize.col('id')), 'numReviews'],
+            [sequelize.fn('AVG', sequelize.col('stars')), 'avgStarRating'],
+        ],
+    });
+
+    const spot = await Spot.findByPk(spotId, {
+        include: [
+            {
+                model: SpotImage,
+                attributes: ['id', 'url', 'preview'],
             },
-            attributes: [
-                [sequelize.fn('COUNT', sequelize.col('id')), 'numReviews'],
-                [sequelize.fn('AVG', sequelize.col('stars')), 'avgStarRating'],
-            ],
+            {
+                model: User,
+                as: 'Owner',
+                attributes: ['id', 'firstName', 'lastName'],
+            },
+        ],
+    });
+
+    if (!spot)
+        return res.status(404).json({
+            message: "Spot couldn't be found",
         });
 
-        const spot = await Spot.findByPk(spotId, {
-            include: [
-                {
-                    model: SpotImage,
-                    attributes: ['id', 'url', 'preview'],
-                },
-                {
-                    model: User,
-                    as: 'Owner',
-                    attributes: ['id', 'firstName', 'lastName'],
-                },
-            ],
-        });
+    const result = {
+        id: spot.id,
+        ownerId: spot.ownerId,
+        address: spot.address,
+        city: spot.city,
+        state: spot.state,
+        country: spot.country,
+        lat: spot.lat,
+        lng: spot.lng,
+        name: spot.name,
+        description: spot.description,
+        price: spot.price,
+        createdAt: spot.createdAt,
+        updatedAt: spot.updatedAt,
+        numReviews: reviews[0].get('numReviews'),
+        avgStarRating: reviews[0].get('avgStarRating'),
+        SpotImages: spot.SpotImages,
+        Owner: spot.Owner,
+    };
 
-        if (!spot) {
-            return res.status(404).json({
-                message: "Spot couldn't be found",
-            });
-        }
-
-        const result = {
-            id: spot.id,
-            ownerId: spot.ownerId,
-            address: spot.address,
-            city: spot.city,
-            state: spot.state,
-            country: spot.country,
-            lat: spot.lat,
-            lng: spot.lng,
-            name: spot.name,
-            description: spot.description,
-            price: spot.price,
-            createdAt: spot.createdAt,
-            updatedAt: spot.updatedAt,
-            numReviews: reviews[0].get('numReviews'),
-            avgStarRating: reviews[0].get('avgStarRating'),
-            SpotImages: spot.SpotImages,
-            Owner: spot.Owner,
-        };
-
-        return res.status(200).json(result);
-    } catch (error) {
-        res.status(500).json({
-            message: error.message,
-        });
-    }
+    return res.status(200).json(result);
 });
 
 // Create a spot
-router.post('/', requireAuth, validateCreateSpot, async (req, res) => {
-    try {
-        const {
-            address,
-            city,
-            state,
-            country,
-            lat,
-            lng,
-            name,
-            description,
-            price,
-            createdAt,
-            updatedAt,
-        } = req.body;
-        const ownerId = req.user.id;
+router.post('/', validateCreateSpot, async (req, res) => {
+    const { address, city, state, country, lat, lng, name, description, price } = req.body;
 
-        const newSpot = await Spot.create({
-            address,
-            city,
-            state,
-            country,
-            lat,
-            lng,
-            name,
-            description,
-            price,
-            ownerId,
-            createdAt,
-            updatedAt,
-        });
+    const ownerId = req.user?.id || 1;
 
-        res.status(201).json({
-            id: newSpot.id,
-            ownerId: newSpot.ownerId,
-            newSpot,
-        });
-    } catch (error) {
-        res.status(400).json({
-            message: error.message,
-        });
-    }
+    const newSpot = await Spot.create({
+        address,
+        city,
+        state,
+        country,
+        lat,
+        lng,
+        name,
+        description,
+        price,
+        ownerId,
+    });
+
+    res.status(201).json({
+        id: newSpot.id,
+        ownerId: newSpot.ownerId,
+        ...newSpot.dataValues,
+    });
 });
 
 router.get('/', async (req, res) => {
@@ -252,51 +220,39 @@ router.get('/', async (req, res) => {
             };
         });
 
-        return res.json(spotsResponse);
-    } catch (error) {
-        res.status(400).json({
-            message: error.message,
-        });
-    }
+    return res.json(spotsResponse);
 });
 
 // EDIT A SPOT
 
 router.put('/:spotId', requireAuth, validateCreateSpot, async (req, res, next) => {
-    try {
-        const { spotId } = req.params;
-        const { address, city, state, country, lat, lng, name, description, price } = req.body;
+    const { spotId } = req.params;
+    const { address, city, state, country, lat, lng, name, description, price } = req.body;
 
-        const spotToUpdate = await Spot.findByPk(spotId);
+    const spotToUpdate = await Spot.findByPk(spotId);
 
-        if (!spotToUpdate) {
-            return res.status(400).json({
-                message: 'Not a valid spot',
-            });
-        }
-        if (req.user.id !== spotToUpdate.ownerId) {
-            return res.status(403).json({
-                message: 'You do not own this spot',
-            });
-        }
-        await spotToUpdate.update({
-            address: address,
-            city: city,
-            state: state,
-            country: country,
-            lat: lat,
-            lng: lng,
-            name: name,
-            description: description,
-            price: price,
-        });
-        return res.status(200).json(spotToUpdate);
-    } catch (error) {
-        console.error(error);
+    if (!spotToUpdate) {
         return res.status(404).json({
-            message: 'Spot was not found',
+            message: "Spot couldn't be found",
         });
     }
+    if (req.user.id !== spotToUpdate.ownerId) {
+        return res.status(403).json({
+            message: 'You do not own this spot',
+        });
+    }
+    await spotToUpdate.update({
+        address: address,
+        city: city,
+        state: state,
+        country: country,
+        lat: lat,
+        lng: lng,
+        name: name,
+        description: description,
+        price: price,
+    });
+    return res.status(200).json(spotToUpdate);
 });
 
 // Create a Review for a Spot based on the Spot's id
@@ -345,7 +301,7 @@ router.post('/:spotId/reviews', requireAuth, validateCreateReview, async (req, r
         updatedAt,
     });
 
-    res.status(201).json({ newReview });
+    res.status(200).json({ newReview });
 });
 
 router.delete('/:spotId', requireAuth, async (req, res) => {
