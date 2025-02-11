@@ -20,10 +20,7 @@ const validateSignup = [
         .exists({ checkFalsy: true })
         .notEmpty()
         .withMessage('First Name is required'),
-    check('lastName')
-        .exists({ checkFalsy: true })
-        .notEmpty()
-        .withMessage('Last Name is required'),
+    check('lastName').exists({ checkFalsy: true }).notEmpty().withMessage('Last Name is required'),
     check('password')
         .exists({ checkFalsy: true })
         .isLength({ min: 6 })
@@ -34,57 +31,42 @@ const validateSignup = [
 // Sign up
 router.post('/', validateSignup, async (req, res, next) => {
     const { email, password, username, firstName, lastName } = req.body;
-    try {
-        const existingEmail = await User.findOne({
-            where: {
-                email,
+
+    const existingEmail = await User.findOne({
+        where: {
+            email,
+        },
+    });
+    if (existingEmail) {
+        res.status(500).json({
+            message: 'User already exists',
+            errors: {
+                email: 'User with that email already exists',
             },
-        });
-        if (existingEmail) {
-            res.status(500).json({
-                message: 'User already exists',
-                errors: {
-                    email: 'User with that email already exists',
-                },
-            });
-        }
-
-        const existingUsername = await User.findOne({
-            where: {
-                username,
-            },
-        });
-        if (existingUsername) {
-            res.status(500).json({
-                message: 'User already exists',
-                errors: {
-                    username: 'User with that username already exists',
-                },
-            });
-        }
-
-    if (existingEmail || existingUsername) {
-        const errors = {};
-
-        const safeUser = {
-            id: user.id,
-            firstName: user.firstName,
-            lastName: user.lastName,
-            email: user.email,
-            username: user.username,
-        };
-
-        await setTokenCookie(res, safeUser);
-
-        return res.status(201).json({
-            user: safeUser,
-        });
-    } catch (err) {
-        return res.status(401).json({
-            message: 'Invalid credentials were submitted.',
         });
     }
-});
+
+    const existingUsername = await User.findOne({
+        where: {
+            username,
+        },
+    });
+    if (existingUsername) {
+        res.status(500).json({
+            message: 'User already exists',
+            errors: {
+                username: 'User with that username already exists',
+            },
+        });
+    }
+
+    const user = await User.create({
+        email,
+        username,
+        firstName,
+        lastName,
+        hashedPassword: bcrypt.hashSync(password),
+    });
 
     const safeUser = {
         id: user.id,
